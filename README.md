@@ -1,11 +1,11 @@
 # The Dutch Merchant
 
-**Final Project – Design and Analysis of Algorithms**
+**Final Project – Algorithms Analysis and Design**
 Bachelor in Computer Science (4th Year)
 
 ## Overview
 
-This repository contains the final project for the course *Algorithms Analysis and Design *. The objective of the project is to apply theoretical and practical tools from algorithm design and computational complexity to a challenging real-world–inspired problem that is computationally intractable (NP-hard or NP-complete).
+This repository contains the final project for the course *Algorithms Analysis and Design*. The objective of the project is to apply theoretical and practical tools from algorithm design and computational complexity to a challenging real-world–inspired problem that is computationally intractable (NP-hard or NP-complete).
 
 The project covers the full analytical cycle: formal problem modeling, complexity analysis, algorithm design, implementation, and empirical evaluation. Special emphasis is placed on rigorous reasoning, correctness, and performance analysis.
 
