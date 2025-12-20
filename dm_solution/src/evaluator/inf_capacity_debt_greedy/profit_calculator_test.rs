@@ -1,6 +1,8 @@
-use crate::{evaluator::inf_capacity_debt_greedy::profit_calculator::InfiniteCapacityDebtEvaluator, model::instance::{Instance, PortId}};
 use crate::evaluator::path_evaluator::PathEvaluator;
-
+use crate::{
+    evaluator::inf_capacity_debt_greedy::profit_calculator::InfiniteCapacityDebtEvaluator,
+    model::instance::{Instance, PortId},
+};
 
 #[test]
 fn test_calculate_best_profit_simple_case() {
@@ -26,7 +28,11 @@ fn test_calculate_best_profit_simple_case() {
     let (profit, _) = evaluator.calculate_best_profit(&instance, &route);
     // Buy 10 at port 0 for 2 each, sell 10 at port 1 for 5 each
     // Initial: 20, buy: -20, sell: +50, final: 50
-    assert!((profit - 50.0).abs() < 1e-6, "Expected profit 50.0, got {}", profit);
+    assert!(
+        (profit - 50.0).abs() < 1e-6,
+        "Expected profit 50.0, got {}",
+        profit
+    );
 }
 
 #[test]
@@ -47,17 +53,17 @@ fn test_calculate_best_profit_liquidity_and_multi_stop() {
         buy_price: vec![
             vec![10.0, 200.0], // Port 0: Luxury too expensive for initial 100
             vec![0.0, 0.0],
-            vec![0.0, 200.0],  // Port 2: Buy Luxury here after making money
+            vec![0.0, 200.0], // Port 2: Buy Luxury here after making money
             vec![0.0, 0.0],
         ],
         sell_price: vec![
             vec![0.0, 0.0],
-            vec![20.0, 0.0],   // Port 1: Sell Cheap good to get cash
+            vec![20.0, 0.0], // Port 1: Sell Cheap good to get cash
             vec![0.0, 0.0],
             vec![0.0, 1000.0], // Port 3: Big payout
         ],
         buy_cap: vec![
-            vec![10.0, 5.0], 
+            vec![10.0, 5.0],
             vec![0.0, 0.0],
             vec![0.0, 5.0],
             vec![0.0, 0.0],
@@ -87,5 +93,8 @@ fn test_calculate_best_profit_liquidity_and_multi_stop() {
         4. Port 3: Sell 5 units of Good 1 for 5000. New Capital: 4205.
     */
 
-    assert!((profit - 4205.0).abs() < 1e-6, "The merchant should at least make more than initial capital");
+    assert!(
+        (profit - 4205.0).abs() < 1e-6,
+        "The merchant should at least make more than initial capital"
+    );
 }

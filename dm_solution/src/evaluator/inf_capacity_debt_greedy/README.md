@@ -113,7 +113,7 @@ GreedyMaxProfit(R, m):
 
 ---
 
-## 6. Observaciones finales
+## Observaciones finales
 
 * Bajo las relajaciones de capacidad infinita y capital libre, **cada mercancía se puede optimizar independientemente**.
 * La ganancia máxima total es simplemente la **suma de ganancias óptimas por mercancía**.
