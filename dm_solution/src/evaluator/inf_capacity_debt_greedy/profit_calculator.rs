@@ -1,10 +1,12 @@
 use std::{collections::BinaryHeap, vec};
 
-use crate::{evaluator::path_evaluator::PathEvaluator, model::instance::{Instance, PortId}};
-
+use crate::{
+    evaluator::path_evaluator::PathEvaluator,
+    model::instance::{Instance, PortId},
+};
 
 /// # Description
-/// 
+///
 /// Infinite capacity debt greedy profit calculator
 /// Calculates the best profit given an instance and a given sequence of nodes (ports).
 /// It assumes that the boat capacity is infinite and that the capital of the boat can be negative, which means it can be used as a debt.
@@ -20,12 +22,16 @@ impl InfiniteCapacityDebtEvaluator {
 struct HeapItem {
     buy_price: f64,
     port_idx: usize,
-    buy_cap: f64
+    buy_cap: f64,
 }
 
 impl HeapItem {
     fn new(buy_price: f64, port_idx: usize, buy_cap: f64) -> Self {
-        HeapItem{buy_price, port_idx, buy_cap}
+        HeapItem {
+            buy_price,
+            port_idx,
+            buy_cap,
+        }
     }
 }
 
@@ -37,16 +43,19 @@ impl Ord for HeapItem {
 
 impl Eq for HeapItem {}
 
-
 impl PathEvaluator for InfiniteCapacityDebtEvaluator {
+    fn name(&self) -> &'static str {
+        return "InfiniteCapacityDebtEvaluator";
+    }
+
     fn calculate_best_profit(self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
         let n_goods = instance.n_goods;
         let n_ports = nodes.len();
 
         let mut profit = instance.initial_capital;
-        // q[j][m] 
+        // q[j][m]
         let mut decisions: Vec<Vec<f64>> = vec![vec![0.0; n_goods]; n_ports];
-        
+
         for m in 0..n_goods {
             let mut heap = BinaryHeap::new();
 
@@ -55,7 +64,7 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
                 let buy_cap = instance.buy_cap[nodes[j]][m];
                 let sell_price = instance.sell_price[nodes[j]][m];
                 let mut sell_cap = instance.sell_cap[nodes[j]][m];
-                
+
                 // if can be bought, add buys to the heap
                 if buy_cap > 0.0 {
                     heap.push(HeapItem::new(buy_price, j, buy_cap));
@@ -75,15 +84,13 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
                     if item.buy_cap > 0.0 {
                         heap.push(item);
                     }
-                    
+
                     // update decisions
                     decisions[item.port_idx][m] += take;
                     decisions[j][m] -= take;
                 }
             }
-
         }
         (profit, decisions)
     }
 }
-
