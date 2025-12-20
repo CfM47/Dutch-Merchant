@@ -4,9 +4,10 @@
 
 For this solution, we assume:
 
-- The merchant can go into debt, i.e. the monetary balance may be negative at any point in the journey
-- Ports have infinite stock and infinite demand for every product, i.e. one can sell and buy as much as one wants on each port, as long as cargo capacity allows
+- The merchant can go into debt, i.e. the monetary balance may be negative at any point in the journey.
+- Ports have infinite stock and infinite demand for every product, i.e. one can sell and buy as much as one wants on each port, as long as cargo capacity allows.
 - The amounts of products one can buy and sell are non-negative real numbers.
+- We cannot buy a product and sell it at the same port (this is either an 'infinite profit' scenario, or a 'no profit' scenario, depending on the prices, which is nonsensical either way).
 
 ## Correctness
 
@@ -20,17 +21,17 @@ We will take an optimal solution, and split the cargo hold in **units of cargo**
 
 First, let us assume we can only have our hold completely full of a single product or completely empty at any point. For this scenario, there is some optimal solution $S$.
 
-Now, let us take an optimal solution of the problem without this restriction. In an optimal solution, let us interpret the cargo hold as an initially uncolored line, out of which, when we buy $L$ weight of product $p_i$, a set of uncolored segments such that the sum of their lengths is $L$ is colored with color $c_i$, and when we sell $L$ weight of a product $p_i$, we take a set of segments colored $c_i$, such that the sum of their lengths is $L$ (which must obviously exist), and remove their color. Now, let us divide the line into segments that were always either completely some color $c_i$ or uncolored. Given that the amount one can buy or sell at a port is infinite, these segments are independent, and none of them could have been used to obtain a higher profit than $S$ per unit of weight in the hold, because then $S$ wouldn't be optimal. Therefore, we can simply substitute the decisions made over each of these segments of cargo, by the ones made for the entire hold in $S$.
+Now, let us take an optimal solution of the problem without this restriction. In an optimal solution, let us interpret the cargo hold as an initially uncolored segment $H$, when we buy $L$ weight of product $m_i$, a set of uncolored sections (sub-segments) of $H$ such that the sum of their lengths is $L$, is colored with color $c_i$, and when we sell $L$ weight of a product $m_i$, we take a set of sub-segments colored $c_i$ from $H$, such that the sum of their lengths is $L$ (which must obviously exist), and remove their color. Now, let us divide $H$ into segments that were always either completely some color $c_i$ or uncolored. Given that the amount one can buy or sell at a port is infinite, these segments are independent, and none of them could have been used to obtain a higher profit than $S$ per unit of weight in the hold, because then $S$ wouldn't be optimal. Therefore, we can simply substitute the decisions made over each of these segments of cargo, by the ones made for the entire hold in $S$.
 
 Therefore, there is an optimal solution such that the hold is always full with a given product, or completely empty.
 
-Now, the problem is reduced to, given pairs of buying and selling prices $b_{ip}$, $s_{jp}$ for cities $i, j$ and product $p$ such that $i \lt j$, obtain the set of non overlapping intervals $[i, j]$ with value $v = max_p\lbrace s_{jp} - b_{ip} \rbrace$ $I$ such that the sum of their values is maximum. This is a weighted interval scheduling problem. We can find the intervals by going through every pair of cities in the path, and creating intervals for each product, taking the buying price from the first city and the selling price from the second. We can skip the intervals where the selling price is lower than the buying price. Either way, the amount of intervals will be $O(n^2p)$ where $n$ is the amount of cities, and $p$ the amount of products.
+Now, the problem is reduced to, given pairs of buying and selling prices $b_{im}$, $s_{jm}$ for cities $i, j$ and product $m$ such that $i \lt j$, obtain the set of non overlapping intervals $[i, j]$ with value $v = max_m\lbrace s_{jm} - b_{im} \rbrace$ $I$ such that the sum of their values is maximum. This is a weighted interval scheduling problem. We can find the intervals by going through every pair of cities in the path, and creating intervals for each product, taking the buying price from the first city and the selling price from the second. We can skip the intervals where the selling price is lower than the buying price. Either way, the amount of intervals will be $O(n^2m)$ where $n$ is the amount of cities, and $m$ the amount of products.
 
 ### Solution of Weighted Interval Scheduling Problem
 
 Now, for each interval, we have two choices, we take it or not, taking it removes our ability to take intervals that overlap with it. We will solve this problem using dynamic programming. Let us sort the intervals by finish time, if we store the maximum weight we can achieve in the subset of all intervals that end at or before $i$ for every $i$, the best solution for finish time $t \leq i + 1$ is either taking one of the intervals that end in $i + 1$ and the best solution for the set of intervals that end when or before it starts, or not taking it, and simply taking $S[i]$ again.
 
-Let $S[i]$ be the maximum weight we can achieve with all intervals with finish time less than or equal to $i$, then $S[i] = max(max\rbrace w_{ic} + S[f(c)] \lbrace, S[i - 1]) such that $w_ic$ is the weight of the $c$-th interval with finish time $i$ and $f(x)$ is the finish time of interval $x$-th that ends at $i$.
+Let $S[i]$ be the maximum weight we can achieve with all intervals with finish time less than or equal to $i$, then $S[i] = max(max_c\lbrace w_{ic} + S[h(c)] \rbrace, S[i - 1])$ such that $w_{ic}$ is the weight of the $c$-th interval with finish time $i$ and $h(x)$ is the start time of the $x$-th interval with finish time $i$.
 
 #### Pseudocode
 
@@ -63,5 +64,5 @@ In order to find not only the maximum weight but also the solution, we simply st
 
 ## Final Complexity
 
-While the weighted interval scheduling problem can be solved in $O(N \cdot log(N))$, here, N is actually $O(n^2p)$ where $n$ is the amount of cities and $p$, the amount of types of products, therefore the complexity is $O(n^2p(log(n) + log(p)))$.
+While the weighted interval scheduling problem can be solved in $O(N \cdot log(N))$, here, N is actually $O(n^2m)$ where $n$ is the amount of cities and $m$, the amount of types of products, therefore the complexity is $O(n^2m(log(n) + log(m)))$.
 
