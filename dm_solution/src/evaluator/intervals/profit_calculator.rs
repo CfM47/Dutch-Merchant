@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::zip};
 
 use crate::evaluator::path_evaluator::PathEvaluator;
 
@@ -60,7 +60,6 @@ impl IntervalSolver {
         for i in 0..nodes.len() {
             let previous_option = if i > 0 { Some(&dp[i - 1]) } else { None };
             let mut best_option: Option<PartialSolution> = None;
-            dbg!(previous_option);
 
             if let Some(interval_list) = intervals.get(&i) {
                 let mut best_interval_choice: Option<(f64, &Interval)> = None;
@@ -70,8 +69,6 @@ impl IntervalSolver {
                         instance.get_buy_price(nodes[interval.buy_port_index], interval.product);
                     let sell_price =
                         instance.get_sell_price(nodes[interval.sell_port_index], interval.product);
-
-                    dbg!(buy_price, sell_price);
 
                     let profit = (sell_price - buy_price) * instance.capacity
                         / instance.get_weight(interval.product);
@@ -84,8 +81,6 @@ impl IntervalSolver {
 
                     let take_profit = profit + previous_profit;
                     let not_take_profit = previous_option.map(|v| v.0).unwrap_or(0.0);
-
-                    dbg!(take_profit, not_take_profit);
 
                     if not_take_profit > take_profit {
                         continue;
@@ -118,8 +113,6 @@ impl IntervalSolver {
                     .cloned()
                     .unwrap_or(PartialSolution(0.0, Vec::new())),
             });
-
-            dbg!(&dp);
         }
 
         dp
@@ -141,7 +134,31 @@ impl IntervalSolver {
                 -(instance.capacity / instance.get_weight(interval.product));
         }
 
-        (solution.0, answ)
+        let expense = Self::calculate_expense(instance, nodes);
+
+        (solution.0 - expense + instance.initial_capital, answ)
+    }
+
+    /// Finds the expenses of the trip, interpreting it as a round trip, i.e.
+    /// it adds travel expenses between contiguous steps in the path and the
+    /// expense from moving from the last city in the path to the first one
+    fn calculate_expense(
+        instance: &crate::model::instance::Instance,
+        nodes: &[crate::model::instance::PortId],
+    ) -> f64 {
+        let mut answ = 0.0;
+
+        for (&i, &j) in zip(
+            nodes[0..(nodes.len() - 1)].iter(),
+            nodes[1..nodes.len()].iter(),
+        ) {
+            answ += instance.travel_time[i][j] + instance.visit_cost[j];
+        }
+
+        answ +=
+            instance.travel_time[*nodes.last().unwrap()][nodes[0]] + instance.visit_cost[nodes[0]];
+
+        answ
     }
 }
 
@@ -160,7 +177,6 @@ impl PathEvaluator for IntervalSolver {
         }
 
         let intervals = Self::construct_intervals(instance, nodes);
-        dbg!(&intervals);
 
         let dp = Self::fill_dp(instance, nodes, &intervals);
 

@@ -1,4 +1,4 @@
-use crate::model::instance::{GoodId, PortId};
+use crate::model::instance::GoodId;
 
 #[derive(Clone, Debug)]
 pub struct Interval {
