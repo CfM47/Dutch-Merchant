@@ -79,7 +79,11 @@ pub fn calculate_best_profit(instance: &Instance, nodes: &[PortId]) -> f64 {
                 // I[0][m] - q_buy[0][m] + q_sell[0][m] = 0
                 // Also: q_sell[0][m] <= 0 (can't sell what we don't have initially)
                 problem.add_constraint(
-                    [(inventory[j][good], 1.0), (q_buy[j][good], -1.0), (q_sell[j][good], 1.0)],
+                    [
+                        (inventory[j][good], 1.0),
+                        (q_buy[j][good], -1.0),
+                        (q_sell[j][good], 1.0),
+                    ],
                     ComparisonOp::Eq,
                     prev_inv,
                 );
