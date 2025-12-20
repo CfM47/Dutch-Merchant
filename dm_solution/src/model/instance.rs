@@ -1,9 +1,8 @@
 pub type PortId = usize;
 pub type GoodId = usize;
 
-
-/// # Description 
-/// 
+/// # Description
+///
 /// Dutch Merchant Problem instance
 
 #[derive(Clone, Debug)]
@@ -48,13 +47,27 @@ pub struct Instance {
 
     /// v_0: Initial port
     pub start_port: PortId,
-    
+
     /// B: Boat capacity
     pub capacity: f64,
-    
+
     /// T: Time limit
     pub time_limit: f64,
 
     /// f_0: Initial capital
     pub initial_capital: f64,
+}
+
+impl Instance {
+    pub fn get_buy_price(&self, port: PortId, product: GoodId) -> f64 {
+        self.buy_price[port][product]
+    }
+
+    pub fn get_sell_price(&self, port: PortId, product: GoodId) -> f64 {
+        self.sell_price[port][product]
+    }
+
+    pub fn get_weight(&self, product: GoodId) -> f64 {
+        self.weight[product]
+    }
 }
