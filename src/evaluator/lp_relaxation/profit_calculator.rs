@@ -6,6 +6,12 @@ use minilp::{ComparisonOp, OptimizationDirection, Problem};
 /// Uses Linear Programming (LP) to solve the relaxed continuous version.
 pub struct LpProfitCalculator;
 
+impl LpProfitCalculator {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 impl PathEvaluator for LpProfitCalculator {
     fn name(&self) -> &'static str {
         "LpProfitCalculator"

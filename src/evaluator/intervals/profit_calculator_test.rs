@@ -1,7 +1,7 @@
 use std::iter::zip;
 
 use crate::{
-    evaluator::{intervals::IntervalSolver, path_evaluator::PathEvaluator},
+    evaluator::{intervals::IntervalEvaluator, path_evaluator::PathEvaluator},
     model::instance::Instance,
 };
 
@@ -14,7 +14,7 @@ fn sanity_check() {
         2.0,
     );
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &[0, 1]);
 
     assert_eq!(solution.0, 2.0);
@@ -30,7 +30,7 @@ fn skips_bad_deal() {
         2.0,
     );
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &[0, 1, 2]);
 
     assert_eq!(solution.0, 4.0);
@@ -56,7 +56,7 @@ fn shuffled_order() {
 
     let instance = test_instance(weight, perm_buy, perm_sell, 2.0);
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &permutation);
 
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0);
@@ -92,7 +92,7 @@ fn shuffled_two_buys() {
 
     let instance = test_instance(weight, perm_buy, perm_sell, 2.0);
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &permutation);
 
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0);
@@ -140,7 +140,7 @@ fn calculate_finl_profit_simple() {
         vec![1.0, 300.0, 300.0, 300.0, 0.0],
     ];
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &[0, 1, 2, 3, 4]);
 
     assert_eq!(
@@ -194,7 +194,7 @@ fn calculates_final_profit_permuted() {
         &permutation,
     );
 
-    let solver = IntervalSolver::new();
+    let solver = IntervalEvaluator::new();
     let solution = solver.calculate_best_profit(&instance, &permutation);
 
     assert_eq!(

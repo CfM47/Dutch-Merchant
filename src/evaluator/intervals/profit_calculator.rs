@@ -7,15 +7,15 @@ use super::Interval;
 #[derive(Clone, Debug)]
 struct PartialSolution<'a>(f64, Vec<&'a Interval>);
 
-pub struct IntervalSolver {}
+pub struct IntervalEvaluator {}
 
-impl Default for IntervalSolver {
+impl Default for IntervalEvaluator {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IntervalSolver {
+impl IntervalEvaluator {
     pub fn new() -> Self {
         Self {}
     }
@@ -162,7 +162,7 @@ impl IntervalSolver {
     }
 }
 
-impl PathEvaluator for IntervalSolver {
+impl PathEvaluator for IntervalEvaluator {
     fn name(&self) -> &'static str {
         "IntervalEvaluator"
     }
