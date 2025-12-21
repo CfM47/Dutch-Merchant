@@ -147,11 +147,12 @@ impl PathEvaluator for LpProfitCalculator {
             };
 
             if j == 0 {
-                // f[0] + sum(...) = f_0 - S(port)
+                // f[0] + sum(...) = f_0 -> NO, initial port visit cost is NOT subtracted.
+                // f[0] + sum(...) = f_0
                 problem.add_constraint(
                     capital_terms,
                     ComparisonOp::Eq,
-                    prev_capital - instance.visit_cost[port],
+                    prev_capital,
                 );
             } else {
                 // f[j] - f[j-1] + sum(...) = -S(port)
@@ -183,7 +184,17 @@ impl PathEvaluator for LpProfitCalculator {
         // Solve the LP
         match problem.solve() {
             Ok(solution) => {
-                let profit = solution.objective();
+                let mut profit = solution.objective();
+
+                // Calculate cumulative travel time
+                let mut total_travel_time = 0.0;
+                for i in 0..r - 1 {
+                    let u = nodes[i];
+                    let v = nodes[i + 1];
+                    total_travel_time += instance.travel_time[u][v];
+                }
+
+                profit -= total_travel_time;
 
                 // Extract decisions
                 for j in 0..r {
