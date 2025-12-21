@@ -19,10 +19,10 @@ impl PathEvaluator for LpProfitCalculator {
     /// A tuple containing:
     /// * The best profit as a float (optimal value from LP relaxation)
     /// * The decisions (quantities bought/sold) for each port and good
-    fn calculate_best_profit(self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
+    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
         let r = nodes.len();
         let m = instance.n_goods;
-        
+
         // Initialize decisions with zeros
         // decisions[j][k] > 0 means buy, < 0 means sell
         let mut decisions: Vec<Vec<f64>> = vec![vec![0.0; m]; r];
@@ -92,7 +92,11 @@ impl PathEvaluator for LpProfitCalculator {
                     // I[0][m] - q_buy[0][m] + q_sell[0][m] = 0
                     // Also: q_sell[0][m] <= 0 (can't sell what we don't have initially)
                     problem.add_constraint(
-                        [(inventory[j][good], 1.0), (q_buy[j][good], -1.0), (q_sell[j][good], 1.0)],
+                        [
+                            (inventory[j][good], 1.0),
+                            (q_buy[j][good], -1.0),
+                            (q_sell[j][good], 1.0),
+                        ],
                         ComparisonOp::Eq,
                         prev_inv,
                     );
@@ -174,27 +178,27 @@ impl PathEvaluator for LpProfitCalculator {
         match problem.solve() {
             Ok(solution) => {
                 let profit = solution.objective();
-                
+
                 // Extract decisions
                 for j in 0..r {
                     for good in 0..m {
                         // Get the value of buy and sell variables from the solution
                         // Since minilp solution uses variable indices, we need to map back if necessary.
                         // However, minilp variables carry their index.
-                        
-                        // Note: minilp 0.2 Solution doesn't have a direct "get value by variable handle" 
+
+                        // Note: minilp 0.2 Solution doesn't have a direct "get value by variable handle"
                         // if we lost the handle, but we kept them in q_buy/q_sell.
                         // Depending on minilp API, we might need to access by index.
-                        
+
                         let buy_val = solution[q_buy[j][good]];
                         let sell_val = solution[q_sell[j][good]];
-                        
+
                         decisions[j][good] = buy_val - sell_val;
                     }
                 }
-                
+
                 (profit, decisions)
-            },
+            }
             Err(_) => (instance.initial_capital, decisions), // If infeasible, return initial capital and zero decisions
         }
     }

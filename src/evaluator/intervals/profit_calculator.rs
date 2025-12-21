@@ -164,11 +164,11 @@ impl IntervalSolver {
 
 impl PathEvaluator for IntervalSolver {
     fn name(&self) -> &'static str {
-        "IntervalSolver"
+        "IntervalEvaluator"
     }
 
     fn calculate_best_profit(
-        self,
+        &self,
         instance: &crate::model::instance::Instance,
         nodes: &[crate::model::instance::PortId],
     ) -> (f64, Vec<Vec<f64>>) {

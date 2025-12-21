@@ -1,7 +1,7 @@
 use crate::model::instance::PortId;
 
 /// Description
-/// 
+///
 /// Dutch Merchant Problem solution
 #[derive(Clone, Debug)]
 pub struct Solution {

@@ -8,9 +8,9 @@ import torch.optim as optim
 from collections import deque
 import numpy as np
 
-from schemas import Instance, get_problem_instance
-from scoring import RouteScorer
-from agent import PolicyGradientAgent
+from .schemas import Instance, get_problem_instance
+from .scoring import RouteScorer
+from .agent import PolicyGradientAgent
 
 
 def train(

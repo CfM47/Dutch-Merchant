@@ -28,7 +28,11 @@ mod tests {
         let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
         // Buy 10 at port 0 for 2 each, sell 10 at port 1 for 5 each
         // Initial: 20, buy: -20, sell: +50, final: 50
-        assert!((profit - 50.0).abs() < 1e-6, "Expected profit 50.0, got {}", profit);
+        assert!(
+            (profit - 50.0).abs() < 1e-6,
+            "Expected profit 50.0, got {}",
+            profit
+        );
     }
 
     #[test]
@@ -49,17 +53,17 @@ mod tests {
             buy_price: vec![
                 vec![10.0, 200.0], // Port 0: Luxury too expensive for initial 100
                 vec![0.0, 0.0],
-                vec![0.0, 200.0],  // Port 2: Buy Luxury here after making money
+                vec![0.0, 200.0], // Port 2: Buy Luxury here after making money
                 vec![0.0, 0.0],
             ],
             sell_price: vec![
                 vec![0.0, 0.0],
-                vec![20.0, 0.0],   // Port 1: Sell Cheap good to get cash
+                vec![20.0, 0.0], // Port 1: Sell Cheap good to get cash
                 vec![0.0, 0.0],
                 vec![0.0, 1000.0], // Port 3: Big payout
             ],
             buy_cap: vec![
-                vec![10.0, 5.0], 
+                vec![10.0, 5.0],
                 vec![0.0, 0.0],
                 vec![0.0, 5.0],
                 vec![0.0, 0.0],
@@ -84,25 +88,26 @@ mod tests {
 
         /* Step-by-Step Logic:
         1. Port 0: Spend 100 to buy 10 units of Good 0. Capital left: 5.
-        2. Port 1: Pay 5 (visit cost). Capital: 0. Sell 10 units of Good 0 for 200. 
+        2. Port 1: Pay 5 (visit cost). Capital: 0. Sell 10 units of Good 0 for 200.
             New Capital: 200.
-        3. Port 2: Pay 5 (visit cost). Capital: 195. 
-            Wait! Good 1 costs 200. The merchant is 5 short! 
-            This tests if the logic handles "almost enough" capital or if it buys 
+        3. Port 2: Pay 5 (visit cost). Capital: 195.
+            Wait! Good 1 costs 200. The merchant is 5 short!
+            This tests if the logic handles "almost enough" capital or if it buys
             partially (if allowed) or fails gracefully.
-        
+
         Optimized outcome:
         If the merchant bought only 9 units of Good 0 at Port 0:
         - Cost: 90. Capital left: 15.
         - Port 1: Cost 5. Capital: 10. Sell 9 units for 180. Total: 190.
         - Port 2: Cost 5. Capital 185. Still can't afford Good 1!
-        
-        Correct strategy: 
+
+        Correct strategy:
         The merchant must manage the visit costs S(v) effectively across the whole route.
         */
 
-        assert!(profit > 105.0, "The merchant should at least make more than initial capital");
+        assert!(
+            profit > 105.0,
+            "The merchant should at least make more than initial capital"
+        );
     }
 }
-
-

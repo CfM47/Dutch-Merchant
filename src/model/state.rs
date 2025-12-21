@@ -1,5 +1,5 @@
 /// # Description
-/// 
+///
 /// State of a Dutch Merchant Problem instance
 #[derive(Clone, Debug)]
 pub struct State {
@@ -14,11 +14,11 @@ pub struct State {
 
 impl State {
     /// # Description
-    /// 
+    ///
     /// Creates an initial state for a Dutch Merchant Problem instance
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `initial_capital` - `f_0` initial capital of the boat
     /// * `n_goods` - `n` number of goods
     pub fn new(initial_capital: f64, n_goods: usize) -> Self {

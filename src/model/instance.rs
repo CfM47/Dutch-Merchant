@@ -5,7 +5,7 @@ pub type GoodId = usize;
 ///
 /// Dutch Merchant Problem instance
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Instance {
     /// ports amount
     pub n_ports: usize,

@@ -11,7 +11,9 @@ pub trait PathEvaluator {
     /// # Returns
     ///
     /// A tuple containing the best profit and the decisions of buying and selling at each node.
-    fn calculate_best_profit(self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>);
+    /// These are to be interpreted as d[i][m] = amount of good m bought (if positive) or sold (if
+    /// negative) at port i.
+    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>);
 
     fn name(&self) -> &'static str;
 }
