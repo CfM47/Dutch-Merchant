@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use super::super::profit_calculator::calculate_best_profit;
+    use super::super::profit_calculator::LpProfitCalculator;
+    use crate::evaluator::path_evaluator::PathEvaluator;
     use crate::model::instance::{Instance, PortId};
 
     #[test]
@@ -23,7 +24,8 @@ mod tests {
         };
         // Route: port 0 -> port 1
         let route: Vec<PortId> = vec![0, 1];
-        let profit = calculate_best_profit(&instance, &route);
+        let calculator = LpProfitCalculator;
+        let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
         // Buy 10 at port 0 for 2 each, sell 10 at port 1 for 5 each
         // Initial: 20, buy: -20, sell: +50, final: 50
         assert!((profit - 50.0).abs() < 1e-6, "Expected profit 50.0, got {}", profit);
@@ -77,7 +79,8 @@ mod tests {
 
         // Route: 0 -> 1 -> 2 -> 3
         let route: Vec<PortId> = vec![0, 1, 2, 3];
-        let profit = calculate_best_profit(&instance, &route);
+        let calculator = LpProfitCalculator;
+        let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
 
         /* Step-by-Step Logic:
         1. Port 0: Spend 100 to buy 10 units of Good 0. Capital left: 5.

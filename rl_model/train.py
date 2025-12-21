@@ -9,7 +9,7 @@ from collections import deque
 import numpy as np
 
 from schemas import Instance, get_problem_instance
-from scoring import score_route
+from scoring import RouteScorer
 from agent import PolicyGradientAgent
 
 
@@ -60,6 +60,7 @@ def train(
         epoch_losses = []
         
         for instance in instances:
+            scorer = RouteScorer(instance)
             for episode in range(episodes_per_epoch):
                 agent.receive_instance(instance)
                 
@@ -69,7 +70,7 @@ def train(
                 )
                 
                 # Use score_route from scoring module
-                reward = score_route(solution)
+                reward = scorer.score_route(solution)
                 epoch_rewards.append(reward)
                 all_rewards.append(reward)
                 
@@ -124,8 +125,9 @@ def evaluate(
     with torch.no_grad():
         for idx, instance in enumerate(instances):
             agent.receive_instance(instance)
+            scorer = RouteScorer(instance)
             solution = agent.generate_solution(greedy=greedy)
-            score = score_route(solution)
+            score = scorer.score_route(solution)
             
             results.append({
                 'instance_idx': idx,
