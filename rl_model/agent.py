@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.distributions import Categorical
 
 from schemas import Instance, get_problem_instance
-from scoring import score_route
+
 
 
 class PolicyNetwork(nn.Module):

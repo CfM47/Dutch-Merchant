@@ -7,15 +7,30 @@ Two functions for external use:
 """
 
 from typing import List
+from schemas import Instance
 
-def score_route(nodes: List[int]) -> float:
+class RouteScorer:
     """
-    Calculate the score for a given sequence of nodes (ports).
+    Scoring class for Dutch Merchant solutions.
+    """
     
-    Args:
-        nodes: A list of port IDs representing the route/solution.
+    def __init__(self, instance: Instance):
+        """
+        Initialize the scorer with a problem instance.
         
-    Returns:
-        A float representing the score of the solution.
-    """
-    pass
+        Args:
+            instance: The problem instance to use for scoring.
+        """
+        self.instance = instance
+
+    def score_route(self, nodes: List[int]) -> float:
+        """
+        Calculate the score for a given sequence of nodes (ports).
+        
+        Args:
+            nodes: A list of port IDs representing the route/solution.
+            
+        Returns:
+            A float representing the score of the solution.
+        """
+        pass

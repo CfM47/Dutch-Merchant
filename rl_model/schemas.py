@@ -119,13 +119,3 @@ class Instance(BaseModel):
                 "initial_capital": 1000.0
             }
         }
-
-def get_problem_instance() -> Instance:
-    """
-    Get a problem instance.
-    
-    Returns:
-        An Instance object representing the problem.
-    """
-    pass
-
