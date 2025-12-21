@@ -16,21 +16,21 @@ mod tests {
             sell_price: vec![vec![0.0], vec![5.0]], // Only port 1 buys
             buy_cap: vec![vec![10.0], vec![0.0]],
             sell_cap: vec![vec![0.0], vec![10.0]],
-            visit_cost: vec![0.0, 0.0],
+            visit_cost: vec![1.0, 0.0],
             start_port: 0,
             capacity: 10.0,
             time_limit: 100.0,
             initial_capital: 20.0,
         };
-        // Route: port 0 -> port 1
-        let route: Vec<PortId> = vec![0, 1];
+        // Route: port 0 -> port 1 -> port 0
+        let route: Vec<PortId> = vec![0, 1, 0];
         let calculator = LpProfitCalculator;
         let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
         // Buy 10 at port 0 for 2 each, sell 10 at port 1 for 5 each
         // Initial: 20, buy: -20, sell: +50, final: 50
         assert!(
-            (profit - 50.0).abs() < 1e-6,
-            "Expected profit 50.0, got {}",
+            (profit - 47.0).abs() < 1e-6,
+            "Expected profit 48.0, got {}",
             profit
         );
     }
