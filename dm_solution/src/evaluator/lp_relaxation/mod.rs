@@ -1,6 +1,6 @@
 mod profit_calculator;
 
-pub use profit_calculator::calculate_best_profit;
+pub use profit_calculator::LpProfitCalculator;
 
 #[cfg(test)]
 mod profit_calculator_test;
