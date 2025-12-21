@@ -26,7 +26,9 @@ class RouteScorer:
         self.evaluator = PathEvaluator(instance.model_dump_json())
 
     def score_route(
-        self, nodes: List[int], evaluator_name: str = "IntervalEvaluator"
+        self,
+        nodes: List[int],
+        evaluator_name: str = "LpProfitCalculator",  # more general case
     ) -> float:
         """
         Calculate the score for a given sequence of nodes (ports).

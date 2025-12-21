@@ -1,9 +1,12 @@
-pub mod inf_capacity_debt_greedy;
+mod inf_capacity_debt_greedy;
+pub use inf_capacity_debt_greedy::InfiniteCapacityDebtEvaluator;
 
 mod intervals;
-pub use intervals::IntervalSolver;
+pub use intervals::IntervalEvaluator;
 
-pub mod lp_relaxation;
+mod lp_relaxation;
+pub use lp_relaxation::LpProfitCalculator;
+
 pub mod path_evaluator;
 
 mod python_integration;
