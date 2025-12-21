@@ -8,21 +8,20 @@
 Una instancia es una tupla:
 
 $$
-\mathcal{I} = (G, v_0, M, w, p^+, p^-, c^+, c^-, B, f_0, S, T)
+\mathcal{I} = (V, t, \kappa, S, M, w, p^+, p^-, c^+, c^-, B, v_0, f_0, T)
 $$
 
 donde:
-
-* $G = (V, t)$ es un grafo completo ponderado de puertos, con pesos
-  $t : V \times V \to \mathbb{R}^+$
-  que representan el tiempo de viaje.
+* $V$ es un conjunto de vértices de un grafo completo, que representan los puertos. 
+* $t : V \times V \to \mathbb{R}^+$ representa el tiempo de viaje entre pares de ciudades.
+* $\kappa : V \times V \to \mathbb{R}^+$ representa el costo de viaje entre pares de ciudades.
+* $S : V \to \mathbb{R}^+$ es el costo fijo de visitar cada puerto.
 * $M$ es el conjunto de mercancías.
 * $w : M \to \mathbb{R}^+$ es el peso de una unidad de mercancía.
 * $p^+ : V \times M \to \mathbb{R}^+$ es el precio de compra de una mercancía por puerto.
 * $p^- : V \times M \to \mathbb{R}^+$ es el precio de venta de una mercancía por puerto.
 * $c^+ : V \times M \to \mathbb{Z}_{\ge 0}$ es la oferta máxima de una mercancía por puerto.
 * $c^- : V \times M \to \mathbb{Z}_{\ge 0}$ es la demanda máxima por puerto.
-* $S : V \to \mathbb{R}^+$ es el costo fijo de visitar cada puerto.
 * $v_0 \in V$ es el puerto de salida y regreso.
 * $f_0 \in \mathbb{R}^+$ es el capital inicial.
 * $B \in \mathbb{R}^+$ es la capacidad del barco.
@@ -55,18 +54,13 @@ $$
 (el tiempo del viaje no excede el tiempo límite)
 
 
-y $Q$ es un vector $Q = (q_1, \dots, q_r)$ de transacciones
-
-$$
-q_j : M \to \mathbb{Z}
-$$
+y $Q$ es un vector de tuplas $Q = ((q^+_1, q^-_1), \dots, (q^+_r, q^-_r))$ de transacciones
 
 donde:
+* $q^+_j : M \to \mathbb{Z}_{\geq 0}$
+* $q^-_j : M \to \mathbb{Z}_{\geq 0}$
 
-* $q_j(m) > 0$: compra.
-* $q_j(m) < 0$: venta.
-
-en el puerto $v_{i_j}$
+representan la compra y venta respectivamente del producto $m$ en el puerto $v_{i_j}$
 
 
 ### Estado del barco
@@ -95,14 +89,22 @@ La transición $\Sigma_j \to \Sigma_{j+1}$ es válida si, para todo $m \in M$ se
 ### Inventario
 
 $$
-I_{j+1}(m) = I_j(m) + q_j(m)
+I_{j+1}(m) = I_j(m) - q^-_j(m) + q^+_j(m)
 $$
+
+(el inventario cambia en consecuencia a las de acciones)
 
 $$
 0 \le I_{j+1}(m)
 $$
 
-(el inventario cambia en consecuencia de acciones, no se tiene una cantidad negativa de una mercancía en el barco)
+(no se tiene una cantidad negativa de una mercancía en el barco)
+
+$$
+0 \leq q^-_j(m) \leq I_j(m)
+$$
+
+(se vende y luego se compra, por tanto solo se puede vender lo que se tiene en el inventario en el momento)
 
 ### Capacidad del barco
 
@@ -115,24 +117,24 @@ $$
 ### Restricciones de stock
 
 $$
--c^-(v_{i_j}, m) \le q_j(m) \le c^+(v_{i_j}, m)
+0 \le q^+_j(m) \le c^+(v_{i_j}, m)
 $$
-
-(se compra y se vende dentro de los límites que admite el puerto) 
+$$
+0 \le q^-_j(m) \le c^-(v_{i_j}, m) 
+$$
+(se compra y se vende dentro de los límites de stock que admite el puerto) 
 
 ### Capital
 
 $$
-f_{j+1} = f_j - \sum_{m: q_j(m) > 0} p^+(v_{i_j},m)q_j(m) - \sum_{m: q_j(m) < 0} p^-(v_{i_j},m)q_j(m) - S(v_{i_j})
+f_{j+1} = f_j - \kappa(v_{i_j}, v_{i_{j+1}}) - \sum_m p^+(v_{i_j},m)q^+_j(m) + \sum_{m} p^-(v_{i_j},m)q^-_j(m) - S(v_{i_j})
 $$
 
 $$
 f_{j+1} \ge 0
 $$
 
-(el capital actual, menos el precio de comprar, más los ingresos por vender menos el precio de los impuestos)
-
-(* nótese que en la segunda sumatoria el signo es negativo puesto que $q_j$ es negativo)
+(el capital actual, menos el costo de moverse de puerto, menos el precio de comprar, más los ingresos por vender menos el precio de los impuestos portuarios)
 
 
 ## 4. Función objetivo
