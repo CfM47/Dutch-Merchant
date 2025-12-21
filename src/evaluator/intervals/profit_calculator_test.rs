@@ -9,16 +9,16 @@ use crate::{
 fn sanity_check() {
     let instance = test_instance(
         vec![1.0],
-        vec![vec![1.0], vec![0.0]],
+        vec![vec![1.0], vec![10.0]],
         vec![vec![0.0], vec![2.0]],
         2.0,
     );
 
     let solver = IntervalEvaluator::new();
-    let solution = solver.calculate_best_profit(&instance, &[0, 1]);
+    let solution = solver.calculate_best_profit(&instance, &[0, 1, 0]);
 
     assert_eq!(solution.0, 2.0);
-    assert_eq!(solution.1, [[2.0], [-2.0]])
+    assert_eq!(solution.1, [[2.0], [-2.0], [0.0]])
 }
 
 #[test]
@@ -62,10 +62,7 @@ fn shuffled_order() {
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0);
     assert_eq!(
         solution.1,
-        permute(
-            vec![[0.0, 2.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.0]],
-            &permutation
-        )
+        vec![[0.0, 2.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.0]],
     )
 }
 
@@ -98,21 +95,18 @@ fn shuffled_two_buys() {
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0);
     assert_eq!(
         solution.1,
-        permute(
-            vec![
-                [0.0, 2.0, 0.0],
-                [0.0, -2.0, 0.0],
-                [0.0, 0.0, 2.0],
-                [0.0, 0.0, 0.0],
-                [0.0, 0.0, -2.0],
-            ],
-            &permutation
-        )
+        vec![
+            [0.0, 2.0, 0.0],
+            [0.0, -2.0, 0.0],
+            [0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, -2.0],
+        ],
     )
 }
 
 #[test]
-fn calculate_finl_profit_simple() {
+fn calculate_final_profit_simple() {
     let weight = vec![1.0, 1.0, 1.0];
     let buy_price = vec![
         vec![10.0, 1.0, 10.0],
@@ -145,7 +139,7 @@ fn calculate_finl_profit_simple() {
 
     assert_eq!(
         solution.0,
-        20.0 + (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0 - 1.0 * 5.0 - 1.0 * 5.0
+        20.0 + (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0 - 1.0 * 4.0 - 1.0 * 4.0
     );
     assert_eq!(
         solution.1,
@@ -199,20 +193,76 @@ fn calculates_final_profit_permuted() {
 
     assert_eq!(
         solution.0,
-        20.0 + (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0 - 1.0 * 5.0 - 1.0 * 5.0
+        20.0 + (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0 - 1.0 * 4.0 - 1.0 * 4.0
     );
     assert_eq!(
         solution.1,
-        permute(
-            vec![
-                [0.0, 2.0, 0.0],
-                [0.0, -2.0, 0.0],
-                [0.0, 0.0, 2.0],
-                [0.0, 0.0, 0.0],
-                [0.0, 0.0, -2.0],
-            ],
-            &permutation
-        )
+        vec![
+            [0.0, 2.0, 0.0],
+            [0.0, -2.0, 0.0],
+            [0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, -2.0],
+        ],
+    )
+}
+
+#[test]
+fn permuted_loop() {
+    let weight = vec![1.0, 1.0, 1.0];
+    let buy_price = vec![
+        vec![10.0, 1.0, 10.0],
+        vec![10.0, 10.0, 10.0],
+        vec![10.0, 10.0, 2.0],
+        vec![10.0, 10.0, 10.0],
+        vec![1.0, 10.0, 10.0],
+    ];
+    let sell_price = vec![
+        vec![10.0, 0.0, 0.0],
+        vec![0.0, 10.0, 0.0],
+        vec![0.0, 0.0, 0.0],
+        vec![0.0, 0.0, 0.0],
+        vec![0.0, 0.0, 10.0],
+    ];
+    let permutation = [1, 4, 3, 0, 2];
+    let perm_buy = permute(buy_price, &permutation);
+    let perm_sell = permute(sell_price, &permutation);
+
+    let mut instance = test_instance(weight, perm_buy, perm_sell, 2.0);
+    instance.initial_capital = 20.0;
+    instance.visit_cost = vec![1.0, 1.0, 1.0, 1.0, 1.0];
+    instance.travel_time = permute(
+        vec![
+            permute(vec![0.0, 1.0, 300.0, 300.0, 300.0], &permutation),
+            permute(vec![300.0, 0.0, 1.0, 300.0, 300.0], &permutation),
+            permute(vec![300.0, 300.0, 0.0, 1.0, 300.0], &permutation),
+            permute(vec![300.0, 300.0, 300.0, 0.0, 1.0], &permutation),
+            permute(vec![1.0, 300.0, 300.0, 300.0, 0.0], &permutation),
+        ],
+        &permutation,
+    );
+
+    let path: Vec<usize> = permutation.into_iter().chain([1]).collect();
+
+    let solver = IntervalEvaluator::new();
+    let solution = solver.calculate_best_profit(&instance, &path);
+
+    assert_eq!(
+        solution.0,
+        (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0 + (10.0 - 1.0) * 2.0 + instance.initial_capital
+            - instance.visit_cost.iter().copied().sum::<f64>()
+            - [1.0, 1.0, 1.0, 1.0, 1.0].iter().sum::<f64>()
+    );
+    assert_eq!(
+        solution.1,
+        vec![
+            [0.0, 2.0, 0.0],
+            [0.0, -2.0, 0.0],
+            [0.0, 0.0, 2.0],
+            [0.0, 0.0, 0.0],
+            [2.0, 0.0, -2.0],
+            [-2.0, 0.0, 0.0],
+        ]
     )
 }
 

@@ -1,5 +1,5 @@
 from ..schemas import Instance
-from ..scoring import RouteScorer
+from ..scoring import EvaluatorName, RouteScorer
 
 
 def test_score_route():
@@ -13,7 +13,7 @@ def test_score_route():
         weight=[1.0],
         buy_price=[[1.0], [10.0]],
         sell_price=[[0.0], [6.0]],
-        buy_cap=[[0.0], [0.0]],
+        buy_cap=[[2.0], [0.0]],
         sell_cap=[[0.0], [10.0]],
         visit_cost=[0.0, 0.0],
         start_port=0,
@@ -25,4 +25,13 @@ def test_score_route():
 
     # Replicating the logic from main.py's assertion
     expected_score = (6 - 1) * 2 - 2 + 10
-    assert scorer.score_route([0, 1], "IntervalEvaluator") == expected_score
+    assert (
+        scorer.score_route([0, 1, 0], EvaluatorName.IntervalEvaluator) == expected_score
+    )
+    #  FIXME: fix the problem model and uncomment this
+
+    # assert (
+    #     scorer.score_route([0, 1, 0], EvaluatorName.InfiniteCapacityDebtEvaluator)
+    #     == expected_score
+    # )
+    assert scorer.score_route(([0, 1, 0])) == expected_score
