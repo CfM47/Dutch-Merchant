@@ -18,7 +18,7 @@ pub struct Instance {
     pub travel_time: Vec<Vec<f64>>,
 
     //  FIXME: take this into account in all models
-    /// C: travel cost per unit of time
+    /// \alpha: travel cost per unit of time
     pub travel_cost: f64,
 
     /// w(m): weight of good m
