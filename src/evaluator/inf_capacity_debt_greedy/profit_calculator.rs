@@ -48,7 +48,7 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
         return "InfiniteCapacityDebtEvaluator";
     }
 
-    fn calculate_best_profit(self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
+    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
         let n_goods = instance.n_goods;
         let n_ports = nodes.len();
 

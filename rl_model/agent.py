@@ -10,8 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 
-from schemas import Instance, get_problem_instance
-
+from .schemas import Instance, get_problem_instance
 
 
 class PolicyNetwork(nn.Module):
