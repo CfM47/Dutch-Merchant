@@ -6,9 +6,16 @@ Two functions for external use:
 2. score_route(nodes) - returns a score for a list of nodes
 """
 
+from enum import StrEnum
 from typing import List, Tuple
 from .schemas import Instance
 from dm_solution import PathEvaluator
+
+
+class EvaluatorName(StrEnum):
+    LpProfitCalculator = "LpProfitCalculator"
+    IntervalEvaluator = "IntervalEvaluator"
+    InfiniteCapacityDebtEvaluator = "InfiniteCapacityDebtEvaluator"
 
 
 class RouteScorer:
@@ -28,7 +35,7 @@ class RouteScorer:
     def score_route(
         self,
         nodes: List[int],
-        evaluator_name: str = "LpProfitCalculator",  # more general case
+        evaluator_name: EvaluatorName = EvaluatorName.LpProfitCalculator,  # more general case
     ) -> float:
         """
         Calculate the score for a given sequence of nodes (ports).
@@ -40,6 +47,6 @@ class RouteScorer:
             A float representing the score of the solution.
         """
         answ: Tuple[float, List[List[float]]] = self.evaluator.score_route(
-            nodes, evaluator_name
+            nodes, evaluator_name.value
         )
         return answ[0]  # Return only the score part

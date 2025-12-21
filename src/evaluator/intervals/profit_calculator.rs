@@ -38,7 +38,7 @@ impl IntervalEvaluator {
                         }
                     };
 
-                    if instance.get_buy_price(nodes[i], p) > instance.get_sell_price(nodes[j], p) {
+                    if instance.get_buy_price(nodes[i], p) >= instance.get_sell_price(nodes[j], p) {
                         continue;
                     }
 
@@ -128,9 +128,9 @@ impl IntervalEvaluator {
             .collect();
 
         for interval in solution.1.iter() {
-            answ[nodes[interval.buy_port_index]][interval.product] =
+            answ[interval.buy_port_index][interval.product] =
                 instance.capacity / instance.get_weight(interval.product);
-            answ[nodes[interval.sell_port_index]][interval.product] =
+            answ[interval.sell_port_index][interval.product] =
                 -(instance.capacity / instance.get_weight(interval.product));
         }
 
@@ -139,9 +139,6 @@ impl IntervalEvaluator {
         (solution.0 - expense + instance.initial_capital, answ)
     }
 
-    /// Finds the expenses of the trip, interpreting it as a round trip, i.e.
-    /// it adds travel expenses between contiguous steps in the path and the
-    /// expense from moving from the last city in the path to the first one
     fn calculate_expense(
         instance: &crate::model::instance::Instance,
         nodes: &[crate::model::instance::PortId],
@@ -154,9 +151,6 @@ impl IntervalEvaluator {
         ) {
             answ += instance.travel_time[i][j] + instance.visit_cost[j];
         }
-
-        answ +=
-            instance.travel_time[*nodes.last().unwrap()][nodes[0]] + instance.visit_cost[nodes[0]];
 
         answ
     }
