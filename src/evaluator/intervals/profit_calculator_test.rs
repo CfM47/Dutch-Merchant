@@ -289,6 +289,7 @@ fn test_instance(
         travel_time: vec![vec![0.0; n_ports]; n_ports],
         visit_cost: vec![0.0; n_ports],
         initial_capital: 0.0,
+        travel_cost: 1.0,
 
         // not important
         time_limit: 0.0,

@@ -11,6 +11,7 @@ fn test_calculate_best_profit_simple_case() {
         n_ports: 2,
         n_goods: 1,
         travel_time: vec![vec![0.0, 1.0], vec![1.0, 0.0]],
+        travel_cost: 0.0,
         weight: vec![1.0],
         buy_price: vec![vec![2.0], vec![0.0]], // Only port 0 sells
         sell_price: vec![vec![0.0], vec![5.0]], // Only port 1 buys
@@ -49,6 +50,7 @@ fn test_calculate_best_profit_liquidity_and_multi_stop() {
             vec![1.0, 1.0, 0.0, 1.0],
             vec![1.0, 1.0, 1.0, 0.0],
         ],
+        travel_cost: 0.0,
         weight: vec![1.0, 2.0],
         buy_price: vec![
             vec![10.0, 200.0], // Port 0: Luxury too expensive for initial 100

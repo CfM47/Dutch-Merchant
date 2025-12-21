@@ -13,9 +13,13 @@ pub struct Instance {
     /// goods amount
     pub n_goods: usize,
 
-    /// t(u,v): tiempo de viaje de u a v
+    /// t(u,v): travel time from u to v
     /// u and v are bound by n_ports
     pub travel_time: Vec<Vec<f64>>,
+
+    //  FIXME: take this into account in all models
+    /// C: travel cost per unit of time
+    pub travel_cost: f64,
 
     /// w(m): weight of good m
     /// m is bound by n_goods
