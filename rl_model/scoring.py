@@ -6,7 +6,7 @@ Two functions for external use:
 2. score_route(nodes) - returns a score for a list of nodes
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 from .schemas import Instance
 from dm_solution import PathEvaluator
 
