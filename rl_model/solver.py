@@ -24,7 +24,7 @@ class Solver:
         checkpoint_path: Optional[str] = None,
         device: str = "cpu",
         embedding_dim: int = 128,
-        hidden_dim: int = 256,
+        hidden_dim: int = 1024,
         max_steps: int = 50,
         # Training hyperparameters
         num_epochs: int = 200,
@@ -32,7 +32,7 @@ class Solver:
         learning_rate: float = 1e-4,
         baseline_decay: float = 0.99,
         # Exploration hyperparameters
-        start_temp: float = 20.0,
+        start_temp: float = 80.0,
         end_temp: float = 0.1,
         verbose: bool = True,
     ):
