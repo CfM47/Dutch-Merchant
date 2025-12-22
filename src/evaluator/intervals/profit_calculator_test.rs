@@ -6,7 +6,7 @@ use crate::{
     model::instance::Instance,
 };
 
-fn generate_solution<Outer, Inner>(s: Outer) -> Vec<Vec<(f64, f64)>>
+fn generate_single_port_action_solution<Outer, Inner>(s: Outer) -> Vec<Vec<(f64, f64)>>
 where
     Outer: IntoIterator<Item = Inner>,
     Inner: IntoIterator,
@@ -42,7 +42,10 @@ fn sanity_check() {
     let solution = solver.calculate_best_profit(&instance, &[0, 1, 0]);
 
     assert_eq!(solution.0, 2.0);
-    assert_eq!(solution.1, generate_solution([[2.0], [-2.0], [0.0]]))
+    assert_eq!(
+        solution.1,
+        generate_single_port_action_solution([[2.0], [-2.0], [0.0]])
+    )
 }
 
 #[test]
@@ -60,7 +63,7 @@ fn skips_bad_deal() {
     assert_eq!(solution.0, 4.0);
     assert_eq!(
         solution.1,
-        generate_solution([[2.0, 0.0], [0.0, 0.0], [-2.0, 0.0]])
+        generate_single_port_action_solution([[2.0, 0.0], [0.0, 0.0], [-2.0, 0.0]])
     )
 }
 
@@ -89,7 +92,11 @@ fn shuffled_order() {
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0);
     assert_eq!(
         solution.1,
-        generate_solution(vec![[0.0, 2.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.0]]),
+        generate_single_port_action_solution(vec![
+            [0.0, 2.0, 0.0],
+            [0.0, -2.0, 0.0],
+            [0.0, 0.0, 0.0]
+        ]),
     )
 }
 
@@ -122,7 +129,7 @@ fn shuffled_two_buys() {
     assert_eq!(solution.0, (10.0 - 1.0) * 2.0 + (10.0 - 2.0) * 2.0);
     assert_eq!(
         solution.1,
-        generate_solution(vec![
+        generate_single_port_action_solution(vec![
             [0.0, 2.0, 0.0],
             [0.0, -2.0, 0.0],
             [0.0, 0.0, 2.0],
@@ -170,7 +177,7 @@ fn calculate_final_profit_simple() {
     );
     assert_eq!(
         solution.1,
-        generate_solution(vec![
+        generate_single_port_action_solution(vec![
             [0.0, 2.0, 0.0],
             [0.0, -2.0, 0.0],
             [0.0, 0.0, 2.0],
@@ -224,7 +231,7 @@ fn calculates_final_profit_permuted() {
     );
     assert_eq!(
         solution.1,
-        generate_solution(vec![
+        generate_single_port_action_solution(vec![
             [0.0, 2.0, 0.0],
             [0.0, -2.0, 0.0],
             [0.0, 0.0, 2.0],
@@ -282,7 +289,7 @@ fn permuted_loop() {
     );
     assert_eq!(
         solution.1,
-        generate_solution(vec![
+        generate_single_port_action_solution(vec![
             [0.0, 2.0, 0.0],
             [0.0, -2.0, 0.0],
             [0.0, 0.0, 2.0],
@@ -291,6 +298,25 @@ fn permuted_loop() {
             [-2.0, 0.0, 0.0],
         ])
     )
+}
+
+#[test]
+fn buy_sell_same_port() {
+    let buy_price = vec![vec![1.0], vec![1.0], vec![10.0]];
+
+    let sell_price = vec![vec![0.0], vec![10.0], vec![10.0]];
+
+    let weight = vec![1.0];
+    let capacity = 2.0;
+
+    let instance = test_instance(weight, buy_price, sell_price, capacity);
+
+    let solver = IntervalEvaluator::new();
+
+    let solution = solver.calculate_best_profit(&instance, &[0, 1, 2]);
+
+    assert_eq!(solution.0, ((10.0 - 1.0) * 2.0) * 2.0);
+    assert_eq!(solution.1, [[(2.0, 0.0)], [(2.0, 2.0)], [(0.0, 2.0)]]);
 }
 
 fn test_instance(
