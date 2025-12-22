@@ -4,6 +4,8 @@ pub use inf_capacity_debt_greedy::InfiniteCapacityDebtEvaluator;
 mod intervals;
 pub use intervals::IntervalEvaluator;
 
+mod integer_brute_force;
+
 mod lp_relaxation;
 pub use lp_relaxation::LpProfitCalculator;
 

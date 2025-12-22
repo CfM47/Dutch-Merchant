@@ -8,6 +8,7 @@ name = "dm_solution"
 crate-type = ["cdylib"]
 
 [dependencies]
+highs = "2.0.0"
 minilp = "0.2"
 
 pyo3 = "0.27.2"
