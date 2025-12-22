@@ -9,5 +9,7 @@ pub use lp_relaxation::LpProfitCalculator;
 
 pub mod path_evaluator;
 
+#[cfg(feature = "python")]
 mod python_integration;
+#[cfg(feature = "python")]
 pub use python_integration::PathEvaluator;

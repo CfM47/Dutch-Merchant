@@ -27,12 +27,12 @@ class Solver:
         hidden_dim: int = 256,
         max_steps: int = 50,
         # Training hyperparameters
-        num_epochs: int = 1000,
+        num_epochs: int = 200,
         episodes_per_epoch: int = 10,
         learning_rate: float = 1e-4,
         baseline_decay: float = 0.99,
         # Exploration hyperparameters
-        start_temp: float = 200.0,
+        start_temp: float = 20.0,
         end_temp: float = 0.1,
         verbose: bool = True,
     ):
