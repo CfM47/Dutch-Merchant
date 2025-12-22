@@ -194,7 +194,7 @@ class PolicyGradientAgent(nn.Module):
         solution.append(start_port)
         total_time = current_time + self.current_instance.travel_time[current_port][start_port]
         
-        print(f"Generated solution: {solution}, Total time: {total_time:.2f} / {self.current_instance.time_limit}")
+        # print(f"Generated solution: {solution}, Total time: {total_time:.2f} / {self.current_instance.time_limit}")
         return solution
     
     def compute_loss(self, reward: float) -> torch.Tensor:

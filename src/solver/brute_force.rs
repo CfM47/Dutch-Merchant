@@ -32,7 +32,7 @@ impl BruteForceSolver {
                     // Try to return to start port to complete the cycle
                     current_path.push(next_port);
                     let (profit, transactions) = self.evaluator.calculate_best_profit(instance, current_path);
-                    println!("Path: {:?}, Profit: {}", current_path, profit);   
+                    // println!("Path: {:?}, Profit: {}", current_path, profit);   
                     if profit > *best_profit {
                         *best_profit = profit;
                         *best_solution = Some(Solution {
@@ -78,4 +78,9 @@ impl Solver for BruteForceSolver {
 
         best_solution
     }
+}
+#[pyo3::pyfunction]
+pub fn brute_force_solve(instance: &Instance) -> Option<Solution> {
+    let solver = BruteForceSolver::new();
+    solver.solve(instance)
 }

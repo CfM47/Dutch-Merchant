@@ -27,7 +27,7 @@ class Solver:
         hidden_dim: int = 1024,
         max_steps: int = 50,
         # Training hyperparameters
-        num_epochs: int = 200,
+        num_epochs: int = 100,
         episodes_per_epoch: int = 10,
         learning_rate: float = 1e-4,
         baseline_decay: float = 0.99,
@@ -182,7 +182,6 @@ class Solver:
         
         if self.verbose:
             print(f"Training complete. Best training score: {best_reward:.4f}")
-            print(f"Final greedy score: {final_score:.4f}")
             
         # Return the better of the two? Or just the greedy one?
         # Usually returning the best seen is safer if training was unstable,

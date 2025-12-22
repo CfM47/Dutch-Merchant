@@ -5,7 +5,8 @@ pub type GoodId = usize;
 ///
 /// Dutch Merchant Problem instance
 
-#[derive(Clone, Debug, serde::Deserialize)]
+#[pyo3::pyclass(get_all)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Instance {
     /// ports amount
     pub n_ports: usize,
@@ -62,7 +63,59 @@ pub struct Instance {
     pub initial_capital: f64,
 }
 
+#[pyo3::pymethods]
 impl Instance {
+    #[new]
+    #[pyo3(signature = (
+        n_ports,
+        n_goods,
+        travel_time,
+        travel_cost,
+        weight,
+        buy_price,
+        sell_price,
+        buy_cap,
+        sell_cap,
+        visit_cost,
+        start_port,
+        capacity,
+        time_limit,
+        initial_capital
+    ))]
+    pub fn new(
+        n_ports: usize,
+        n_goods: usize,
+        travel_time: Vec<Vec<f64>>,
+        travel_cost: f64,
+        weight: Vec<f64>,
+        buy_price: Vec<Vec<f64>>,
+        sell_price: Vec<Vec<f64>>,
+        buy_cap: Vec<Vec<f64>>,
+        sell_cap: Vec<Vec<f64>>,
+        visit_cost: Vec<f64>,
+        start_port: PortId,
+        capacity: f64,
+        time_limit: f64,
+        initial_capital: f64,
+    ) -> Self {
+        Self {
+            n_ports,
+            n_goods,
+            travel_time,
+            travel_cost,
+            weight,
+            buy_price,
+            sell_price,
+            buy_cap,
+            sell_cap,
+            visit_cost,
+            start_port,
+            capacity,
+            time_limit,
+            initial_capital,
+        }
+    }
+
     pub fn get_buy_price(&self, port: PortId, product: GoodId) -> f64 {
         self.buy_price[port][product]
     }

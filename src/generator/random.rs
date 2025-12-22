@@ -1,6 +1,8 @@
 use crate::model::instance::{Instance, PortId};
 use rand::Rng;
 
+#[pyo3::pyclass(get_all, set_all)]
+#[derive(Clone, Debug)]
 pub struct RandomConfig {
     pub n_ports: usize,
     pub n_goods: usize,
@@ -12,6 +14,48 @@ pub struct RandomConfig {
     pub initial_capital_range: (f64, f64),
     pub visit_cost_range: (f64, f64),
     pub travel_cost_range: (f64, f64),
+}
+
+#[pyo3::pymethods]
+impl RandomConfig {
+    #[new]
+    #[pyo3(signature = (
+        n_ports=5,
+        n_goods=3,
+        travel_time_range=(1.0, 10.0),
+        price_range=(10.0, 100.0),
+        weight_range=(1.0, 5.0),
+        capacity_range=(50.0, 200.0),
+        time_limit_range=(50.0, 200.0),
+        initial_capital_range=(100.0, 500.0),
+        visit_cost_range=(5.0, 20.0),
+        travel_cost_range=(0.1, 1.0)
+    ))]
+    pub fn new(
+        n_ports: usize,
+        n_goods: usize,
+        travel_time_range: (f64, f64),
+        price_range: (f64, f64),
+        weight_range: (f64, f64),
+        capacity_range: (f64, f64),
+        time_limit_range: (f64, f64),
+        initial_capital_range: (f64, f64),
+        visit_cost_range: (f64, f64),
+        travel_cost_range: (f64, f64),
+    ) -> Self {
+        Self {
+            n_ports,
+            n_goods,
+            travel_time_range,
+            price_range,
+            weight_range,
+            capacity_range,
+            time_limit_range,
+            initial_capital_range,
+            visit_cost_range,
+            travel_cost_range,
+        }
+    }
 }
 
 impl Default for RandomConfig {
@@ -31,6 +75,7 @@ impl Default for RandomConfig {
     }
 }
 
+#[pyo3::pyfunction]
 pub fn generate_random_instance(config: &RandomConfig) -> Instance {
     let mut rng = rand::rng();
 
