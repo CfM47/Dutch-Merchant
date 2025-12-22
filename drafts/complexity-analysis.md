@@ -10,7 +10,7 @@ Consideramos la versión de decisión del problema de optimización definido pre
 
 * Una instancia
   $$
-  \mathcal{I} = (G, v_0, M, w, p^+, p^-, c^+, c^-, B, f_0, S, T)
+  \mathcal{I} = (V, t, \kappa, S, M, w, p^+, p^-, c^+, c^-, B, v_0, f_0, T)
   $$
   del problema *El Comerciante Holandés*.
 * Un umbral de capital $K \in \mathbb{R}^+$.
@@ -57,17 +57,20 @@ La única forma de alcanzar el capital objetivo es recorriendo todos los puertos
 
 ## 4. Construcción de la reducción
 
-Sea una instancia de TSP de decisión $(V,E,d,D)$, con
-$V = {v_0, v_1, \dots, v_{n-1}}.$
+Sea una instancia de TSP de decisión $(V_{TSP},d,D)$, con
+$V_{TSP} = {v_0, v_1, \dots, v_{n-1}}.$
 
 Construimos en tiempo polinomial una instancia $\mathcal{I}'$ de **CH-DEC** como sigue.
 
 
 
-### 4.1 Grafo y tiempos de viaje
+### 4.1 Puertos, tiempos y costos de viaje
 
 $$
-G = (V, t), \quad t(u,v) = d(u,v) \quad \forall u,v \in V
+V=V_{TSP} \quad
+t(u,v) = d(u,v) \quad
+\kappa(u,v) = 0 \quad
+\forall u,v \in V
 $$
 
 El puerto inicial y final es $v_0$.
@@ -91,8 +94,7 @@ c^+(v_i,m) = 1, \quad
 c^-(v_i,m) = 0
 $$
 $$
-p^+(v_i,m) = 0, \quad
-p^-(v_i,m) = 0
+p^+(v_i,m) = p^-(v_i,m)= 0
 $$
 
 El puerto $v_0$ se define como el único comprador:
@@ -134,24 +136,24 @@ Demostramos la equivalencia entre soluciones factibles de ambas instancias.
 
 Sea
 $$
-C = (v_0, v_{\pi(1)}, \dots, v_{\pi(n-1)}, v_0)
+C = (v_0, v_{i_1}, \dots, v_{i_{n-1}}, v_0)
 $$
-un ciclo Hamiltoniano de costo total a lo sumo (D).
+un ciclo Hamiltoniano de costo total $\leq D$.
 
 Definimos la solución del Comerciante Holandés:
 
 * Ruta: $R = C$.
 * Transacciones:
   $$
-  q_j(m) = 1 \quad \text{en cada } v_{\pi(j)}
+  q^+_j(m) = 1 \quad q^-_j(m) = 0 \quad \text{en cada } v_{i_j}
   $$
   $$
-  q_{r+1}(m) = -(n-1) \quad \text{en } v_0
+  q^+_j(m) = 0 \quad q^-_{r+1}(m) = n-1 \quad \text{en } v_0
   $$
 
 **Verificación de factibilidad:**
 
-* Inventario: se incrementa en una unidad por puerto visitado y nunca es negativo.
+* Inventario: se incrementa en una unidad por puerto visitado y nunca es negativo. En el puerto $v_0$, el inventario acumulado es exactamente $n-1$, por lo que la restricción $0 \leq q^-_{r+1}(m) \leq I_{r+1}(m)$ se satisface.
 * Stock: cada puerto $v_i \neq v_0$ permite a lo sumo una compra.
 * Capacidad: $B$ es suficiente.
 * Capital:
@@ -186,12 +188,13 @@ Esto implica que:
 * Cada uno se visita a lo sumo una vez (por definición de ruta).
 * La ruta tiene la forma:
   $$
-  R = (v_0, v_{\pi(1)}, \dots, v_{\pi(n-1)}, v_0)
+  R = (v_0, v_{i_1}, \dots, v_{i_{n-1}}, v_0)
   $$
 
 Finalmente, como:
 $$
-\sum t(v_{i_j},v_{i_{j+1}}) \le T = D,
+\sum_{j=0}^{n-1} t(v_{i_j}, v_{i_{j+1}})
+ \le T = D,
 $$
 la ruta corresponde a un ciclo Hamiltoniano de costo a lo sumo $D$.
 
