@@ -10,7 +10,7 @@ pub struct Solution {
     pub route: Vec<PortId>,
 
     /// A function of transaction
-    /// q_j(m): the amount of good m bought at port jth of the route
+    /// q^+_j(m), q^-_j(m): the amount of good m bought, sold at port jth of the route
     /// transactions[j][m]
-    pub transactions: Vec<Vec<f64>>,
+    pub transactions: Vec<Vec<(f64, f64)>>,
 }

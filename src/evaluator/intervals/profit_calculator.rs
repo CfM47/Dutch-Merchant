@@ -122,16 +122,16 @@ impl IntervalEvaluator {
         instance: &crate::model::instance::Instance,
         solution: &PartialSolution,
         nodes: &[crate::model::instance::PortId],
-    ) -> (f64, Vec<Vec<f64>>) {
-        let mut answ: Vec<Vec<f64>> = (0..nodes.len())
-            .map(|_| vec![0.0; instance.n_goods])
+    ) -> (f64, Vec<Vec<(f64, f64)>>) {
+        let mut answ: Vec<Vec<(f64, f64)>> = (0..nodes.len())
+            .map(|_| vec![(0.0, 0.0); instance.n_goods])
             .collect();
 
         for interval in solution.1.iter() {
-            answ[interval.buy_port_index][interval.product] =
+            answ[interval.buy_port_index][interval.product].0 =
                 instance.capacity / instance.get_weight(interval.product);
-            answ[interval.sell_port_index][interval.product] =
-                -(instance.capacity / instance.get_weight(interval.product));
+            answ[interval.sell_port_index][interval.product].1 =
+                instance.capacity / instance.get_weight(interval.product);
         }
 
         let expense = Self::calculate_expense(instance, nodes);
@@ -165,7 +165,7 @@ impl PathEvaluator for IntervalEvaluator {
         &self,
         instance: &crate::model::instance::Instance,
         nodes: &[crate::model::instance::PortId],
-    ) -> (f64, Vec<Vec<f64>>) {
+    ) -> (f64, Vec<Vec<(f64, f64)>>) {
         if nodes.is_empty() {
             return (0.0, vec![]);
         }

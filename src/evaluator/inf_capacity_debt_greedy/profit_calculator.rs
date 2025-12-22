@@ -50,14 +50,14 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
         return "InfiniteCapacityDebtEvaluator";
     }
 
-    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
+    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<(f64, f64)>>) {
         let n_goods = instance.n_goods;
         let n_ports = nodes.len();
 
         let mut capital = instance.initial_capital;
         // q[j][m]
         // TODO: fix this into a vec of tuples
-        let mut decisions: Vec<Vec<f64>> = vec![vec![0.0; n_goods]; n_ports];
+        let mut decisions: Vec<Vec<(f64, f64)>> = vec![vec![(0.0, 0.0); n_goods]; n_ports];
 
         for m in 0..n_goods {
             // fix the problem for good m
@@ -92,9 +92,9 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
                         continue;
                     }
                     let x = sell_cap[i].min(buy_cap[j]);
-                    // TODO:
-                    // decisions[j][m].0 += x
-                    // decisions[i][m].1 += x
+
+                    decisions[j][m].0 += x;
+                    decisions[i][m].1 += x;
                     sell_cap[i] -= x;
                     buy_cap[j] -= x;
 

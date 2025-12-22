@@ -7,7 +7,7 @@ For this solution, we assume:
 - The merchant can go into debt, i.e. the monetary balance may be negative at any point in the journey.
 - Ports have infinite stock and infinite demand for every product, i.e. one can sell and buy as much as one wants on each port, as long as cargo capacity allows.
 - The amounts of products one can buy and sell are non-negative real numbers.
-- We cannot buy a product and sell it at the same port (this is either an 'infinite profit' scenario, or a 'no profit' scenario, depending on the prices, which is nonsensical either way).
+- We cannot buy a product and sell it at the same port immediately (given that there is no buying or selling cap, this is either an 'infinite profit' scenario, or a 'no profit' scenario, depending on the prices, which is nonsensical either way), we **can** sell a product we had in our hold at a given port, then buy it at the same port again however.
 
 ## Correctness
 

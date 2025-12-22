@@ -35,7 +35,7 @@ impl PathEvaluator {
         &self,
         path: Vec<usize>,
         evaluator_name: &str,
-    ) -> PyResult<(f64, Vec<Vec<f64>>)> {
+    ) -> PyResult<(f64, Vec<Vec<(f64, f64)>>)> {
         let evaluator: &dyn PathEvaluatorTrait = if evaluator_name == self.interval_evaluator.name()
         {
             &self.interval_evaluator

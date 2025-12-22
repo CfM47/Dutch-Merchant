@@ -25,13 +25,13 @@ impl PathEvaluator for LpProfitCalculator {
     /// A tuple containing:
     /// * The best profit as a float (optimal value from LP relaxation)
     /// * The decisions (quantities bought/sold) for each port and good
-    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<f64>>) {
+    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<(f64, f64)>>) {
         let r = nodes.len();
         let m = instance.n_goods;
 
         // Initialize decisions with zeros
         // decisions[j][k] > 0 means buy, < 0 means sell
-        let mut decisions: Vec<Vec<f64>> = vec![vec![0.0; m]; r];
+        let mut decisions: Vec<Vec<(f64, f64)>> = vec![vec![(0.0, 0.0); m]; r];
 
         if nodes.is_empty() {
             return (instance.initial_capital, decisions);
@@ -210,7 +210,7 @@ impl PathEvaluator for LpProfitCalculator {
                         let buy_val = solution[q_buy[j][good]];
                         let sell_val = solution[q_sell[j][good]];
 
-                        decisions[j][good] = buy_val - sell_val;
+                        decisions[j][good] = (buy_val, sell_val);
                     }
                 }
 
