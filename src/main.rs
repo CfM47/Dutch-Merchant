@@ -1,5 +1,9 @@
-use dm_solution::model::instance::Instance;
-use dm_solution::solver::{BruteForceSolver, Solver};
+mod evaluator;
+mod model;
+mod solver;
+
+use crate::model::instance::Instance;
+use crate::solver::{BruteForceSolver, Solver};
 
 fn main() {
     println!("Dutch Merchant - Brute Force Solver");
@@ -59,8 +63,8 @@ fn main() {
         println!("Transactions: {:?}", solution.transactions);
         
         // Evaluate the solution to show final profit
-        let evaluator = dm_solution::evaluator::LpProfitCalculator::new();
-        let (profit, _) = dm_solution::evaluator::path_evaluator::PathEvaluator::calculate_best_profit(
+        let evaluator = crate::evaluator::LpProfitCalculator::new();
+        let (profit, _) = crate::evaluator::path_evaluator::PathEvaluator::calculate_best_profit(
             &evaluator, 
             &instance, 
             &solution.route
