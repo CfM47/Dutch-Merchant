@@ -1,12 +1,12 @@
 # Subproblema: Maximizando ganancia dado un camino
 
-## Definición formal del subproblema0
+## Definición formal del subproblema
 
 Sea $R = (v_0, v_1, \dots, v_r, v_0)$ un camino (ruta) factible de puertos.
-Queremos determinar las transacciones $Q = (q_1, \dots, q_r)$ que maximizan:
+Queremos determinar las transacciones $Q = ((q_1^+,q_1^-), \dots, (q_r^+, q_r^-))$ que maximizan:
 
 $$
-f_{r+1} = f_0 - \sum_{j=1}^r \sum_{m\in M: q_j(m)>0} p^+(v_j,m) q_j(m) - \sum_{j=1}^r \sum_{m\in M: q_j(m)<0} p^-(v_j,m) q_j(m)
+f_{r+1} = f_0 - \sum_{j=1}^r \sum_{m\in M} p^+(v_j,m) q_j^+(m) + \sum_{j=1}^r \sum_{m\in M} p^-(v_j,m) q_j^-(m)
 $$
 
 bajo las restricciones:
@@ -15,8 +15,6 @@ bajo las restricciones:
 2. Stock de compra/venta: $-c^-(v_j,m) \le q_j(m) \le c^+(v_j,m)$
 
 Asumiendo $B=+\infty$ y $f_j$ libre, las restricciones de capacidad y capital no negativo se eliminan.
-
----
 
 ## Observación clave
 
@@ -33,20 +31,16 @@ Asumiendo $B=+\infty$ y $f_j$ libre, las restricciones de capacidad y capital no
 
 La mayor ganancia global que podemos obtener para una instancia de la mercancía $m$ es comprarla donde más barato se venda, y venderla en el puerto siguiente donde más caro se compre. No tiene sentido comprar una unidad de mercancía si luego no se puede vender.
 
-- Añadimos todas los puertos $v_i$ a un heap $H_1$ de máximos, tomando como llave su precio de venta $p^-_i$.
-- Mientras que el $H_1$ no este vacío (existe una posible venta)
-  - Sea $v_i = \text{pop}(H_1)$ el puerto con precio de venta mas alto.
-  - Para cada puerto $v_j$ con $j < i$ (vienen antes en la ruta) los añadimos a un heap de mínimos $H_2$, con su precio de compra $p^+_j$ como llave.
-  - Mientras que $c^-_i \geq 0$ y $H_2$ no este vacío (exista una posible compra):
-    - Sea $v_j = \text{pop}(H_2)$ el puerto con el menor precio de compra.
-    - Si $p^-_i \leq p^+_j$ continua (no hay ganancia).
-    - En caso contrario:
-    - $q^-_i = q^+_j= x =\text{min}(c^-_i, c^+_j)$ (compra en $v_j$ todas las unidades que puedas vender en $v_i$) 
-    - $c^-_i := c^-_i - x$ decrementa la cantidad posible a vender de $v_i$ en $x$
-    - $c^+_j := c^+_j - x$ decrementa la cantidad posible a comprar de $v_j$ en $x$.
+- Sea $A := \lbrace v_j| \quad c^-_j > 0 \rbrace$ (puertos donde es posible vender)
+- Mientras que $H \neq \empty$ sea $v_j = _{}\text{argmax}\lbrace p^-_k | v_k \in A \rbrace$
+  - Sea $B := \lbrace v_i| \quad c^-_i > 0, p^+_i < p^-_j, i<j \rbrace$ (puertos anteriores donde se puede comprar con ganancia)
+  - Si $B=\empty$ entonces $v_j$ no da ganancia vender nada en $v_j$, hacemos $A = A - \{v_j\}$
+  - En caso contrario sea $v_i = _{}\text{argmin}\lbrace p^-_k | v_k \in A \rbrace$
+  - Sea $x = \text{min}(c^+_i, c^-_j)$
+  - Guardamos las decisiones $q^+_i = q^-j = x$ (comprar y vender respectivamente, en esa pareja de puertos)
+  - Hacemos $c^+_i = c^+_i - x$ y $c^-_j = c^-_j - x$ (actualizar inventario de los puertos, notese que los conjuntos $A$ y $B$, cambian en este paso)
 
 ## Demostración de correctitud.
-
 Consideramos el subproblema de maximizar la ganancia total asociada a una ruta fija
 $$
 R = (v_0, v_1, \dots, v_r, v_0)
@@ -72,7 +66,7 @@ p^+(v_j,m)q^+_j(m)
 \bigr).
 $$
 
-Bajo las asunciones (B = +\infty) y (f_j \in \mathbb{R}), las restricciones de factibilidad se descomponen por mercancía, es decir, no existe ninguna restricción que involucre simultáneamente decisiones asociadas a mercancías distintas.
+Bajo las asunciones $B = +\infty$ y $f_j \in \mathbb{R}$, las restricciones de factibilidad se descomponen por mercancía, es decir, no existe ninguna restricción que involucre simultáneamente decisiones asociadas a mercancías distintas.
 
 Por lo tanto, maximizar la ganancia total es equivalente a maximizar, de manera independiente, la ganancia asociada a cada mercancía.
 
@@ -153,3 +147,69 @@ $\square$
 ### Corolario
 
 Dado que el problema global se descompone por mercancía (Lema 1), aplicar el algoritmo greedy de manera independiente a cada mercancía produce una solución óptima global para **MAX-PROFIT(R)**.
+
+## Complejidad temporal
+
+Analizamos la complejidad del algoritmo greedy para el subproblema **MAX-PROFIT(R)**.
+
+### Parámetros
+
+Sea:
+
+* $r = |R|$: número de puertos en la ruta (sin contar el retorno a $v_0$).
+* $|M|$: número de mercancías.
+* Para una mercancía fija $m$, sean:
+
+  * $\{(p^+_i, c^+_i)\}_{i=1}^r$ los precios y capacidades de compra,
+  * $\{(p^-_j, c^-_j)\}_{j=1}^r$ los precios y capacidades de venta.
+
+---
+
+### Complejidad para una mercancía fija
+
+Para una mercancía $m$, el algoritmo realiza las siguientes operaciones conceptuales:
+
+1. **Ordenamiento de puertos por precios**
+
+   * Los puertos se ordenan una vez por precio de venta $p^-_j$(orden decreciente).
+   * Los puertos se ordenan una vez por precio de compra $p^+_i$ (orden creciente).
+
+   Esto puede realizarse en:
+   $$
+   O(r \log r).
+   $$
+
+2. **Emparejamiento greedy de compras y ventas**
+
+   Para cada puerto de venta $v_j$, el algoritmo recorre los puertos de compra anteriores $v_i$ con $i<j$, filtrando aquellos que:
+
+   * tienen capacidad disponible,
+   * producen ganancia positiva $(p^-_j > p^+_i)$.
+
+   Cada par $(i,j)$ se considera a lo sumo una vez. Por lo tanto, el número total de operaciones de emparejamiento está acotado por:
+
+   $$
+   O(r^2).
+   $$
+
+   No se itera unidad por unidad, sino que en cada paso se empareja la máxima cantidad posible.
+
+### Complejidad total por mercancía
+
+Sumando ambas fases, el costo total para una mercancía fija es:
+
+$$
+O(r \log r + r^2) = O(r^2).
+$$
+
+### Complejidad total del subproblema **MAX-PROFIT(R)**
+
+Por el **Lema 1 (Independencia entre mercancías)**, el problema se descompone en $|M|$ subproblemas independientes, uno por mercancía.
+
+Aplicando el algoritmo greedy a cada mercancía, se obtiene una complejidad total de:
+
+$$
+O(|M| \cdot r^2).
+$$
+
+
