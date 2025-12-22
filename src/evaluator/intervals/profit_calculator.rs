@@ -149,7 +149,7 @@ impl IntervalEvaluator {
             nodes[0..(nodes.len() - 1)].iter(),
             nodes[1..nodes.len()].iter(),
         ) {
-            answ += instance.travel_time[i][j] + instance.visit_cost[j];
+            answ += instance.travel_time[i][j] * instance.travel_cost + instance.visit_cost[j];
         }
 
         answ

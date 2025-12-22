@@ -194,7 +194,7 @@ impl PathEvaluator for LpProfitCalculator {
                     total_travel_time += instance.travel_time[u][v];
                 }
 
-                profit -= total_travel_time;
+                profit -= total_travel_time * instance.travel_cost;
 
                 // Extract decisions
                 for j in 0..r {

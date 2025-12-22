@@ -91,6 +91,14 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
                 }
             }
         }
+
+        for j in 1..nodes.len() {
+            let travel_time = instance.travel_time[nodes[j - 1]][nodes[j]];
+            let travel_cost = instance.travel_cost;
+            let visit_cost = instance.visit_cost[nodes[j]];
+            profit -= travel_time * travel_cost + visit_cost;
+        }
+
         (profit, decisions)
     }
 }

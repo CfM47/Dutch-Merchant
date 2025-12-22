@@ -113,7 +113,7 @@ class PolicyGradientAgent(nn.Module):
         if self.n_ports != instance.n_ports or self.n_goods != instance.n_goods:
             self.n_ports = instance.n_ports
             self.n_goods = instance.n_goods
-        raw_features = self._encode_instance(instance)
+        raw_features = self._encode_instance(instance).to(next(self.parameters()).device)
         self.instance_features = self.instance_encoder(raw_features)
     
     def select_action(
@@ -121,6 +121,7 @@ class PolicyGradientAgent(nn.Module):
         current_port: int,
         mask: Optional[torch.Tensor] = None,
         greedy: bool = False,
+        temperature: float = 1.0,
     ) -> Tuple[int, Optional[torch.Tensor]]:
         """Select next port to visit."""
         if self.instance_features is None:
@@ -132,7 +133,8 @@ class PolicyGradientAgent(nn.Module):
             action = logits.argmax(dim=-1)
             return action.item(), None
         else:
-            probs = F.softmax(logits, dim=-1)
+            # Apply temperature
+            probs = F.softmax(logits / max(temperature, 1e-6), dim=-1)
             dist = Categorical(probs)
             action = dist.sample()
             log_prob = dist.log_prob(action)
@@ -142,35 +144,57 @@ class PolicyGradientAgent(nn.Module):
         self, 
         greedy: bool = False,
         return_log_probs: bool = False,
+        temperature: float = 1.0,
     ) -> List[int]:
         """Generate a complete solution (sequence of ports)."""
         if self.current_instance is None:
             raise ValueError("No instance loaded. Call receive_instance first.")
         
-        solution = [self.current_instance.start_port]
-        current_port = self.current_instance.start_port
-        visited = set([current_port])
+        start_port = self.current_instance.start_port
+        solution = [start_port]
+        current_port = start_port
+        visited = {start_port}
+        current_time = 0.0
         
         if return_log_probs:
             self.saved_log_probs = []
         
         for step in range(self.max_steps):
-            mask = torch.zeros(1, self.n_ports, dtype=torch.bool)
-            for port in visited:
-                mask[0, port] = True
+            mask = torch.ones(1, self.n_ports, dtype=torch.bool)
             
-            if mask.all():
+            # Mask visited ports and ports that would exceed time limit
+            any_valid = False
+            for port in range(self.n_ports):
+                if port in visited:
+                    continue
+                
+                time_to_port = self.current_instance.travel_time[current_port][port]
+                time_back_home = self.current_instance.travel_time[port][start_port]
+                
+                if current_time + time_to_port + time_back_home <= self.current_instance.time_limit:
+                    mask[0, port] = False
+                    any_valid = True
+            
+            if not any_valid:
                 break
             
-            next_port, log_prob = self.select_action(current_port, mask, greedy)
+            next_port, log_prob = self.select_action(
+                current_port, mask, greedy, temperature
+            )
             
             if return_log_probs and log_prob is not None:
                 self.saved_log_probs.append(log_prob)
             
+            current_time += self.current_instance.travel_time[current_port][next_port]
             solution.append(next_port)
             current_port = next_port
             visited.add(next_port)
+            
+        # Finally, return to start_port
+        solution.append(start_port)
+        total_time = current_time + self.current_instance.travel_time[current_port][start_port]
         
+        print(f"Generated solution: {solution}, Total time: {total_time:.2f} / {self.current_instance.time_limit}")
         return solution
     
     def compute_loss(self, reward: float) -> torch.Tensor:
