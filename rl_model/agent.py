@@ -150,19 +150,32 @@ class PolicyGradientAgent(nn.Module):
         if self.current_instance is None:
             raise ValueError("No instance loaded. Call receive_instance first.")
         
-        solution = [self.current_instance.start_port]
-        current_port = self.current_instance.start_port
-        visited = set([current_port])
+        start_port = self.current_instance.start_port
+        solution = [start_port]
+        current_port = start_port
+        visited = {start_port}
+        current_time = 0.0
         
         if return_log_probs:
             self.saved_log_probs = []
         
         for step in range(self.max_steps):
-            mask = torch.zeros(1, self.n_ports, dtype=torch.bool)
-            for port in visited:
-                mask[0, port] = True
+            mask = torch.ones(1, self.n_ports, dtype=torch.bool)
             
-            if mask.all():
+            # Mask visited ports and ports that would exceed time limit
+            any_valid = False
+            for port in range(self.n_ports):
+                if port in visited:
+                    continue
+                
+                time_to_port = self.current_instance.travel_time[current_port][port]
+                time_back_home = self.current_instance.travel_time[port][start_port]
+                
+                if current_time + time_to_port + time_back_home <= self.current_instance.time_limit:
+                    mask[0, port] = False
+                    any_valid = True
+            
+            if not any_valid:
                 break
             
             next_port, log_prob = self.select_action(
@@ -172,10 +185,16 @@ class PolicyGradientAgent(nn.Module):
             if return_log_probs and log_prob is not None:
                 self.saved_log_probs.append(log_prob)
             
+            current_time += self.current_instance.travel_time[current_port][next_port]
             solution.append(next_port)
             current_port = next_port
             visited.add(next_port)
-        print(f"Generated solution: {solution}")
+            
+        # Finally, return to start_port
+        solution.append(start_port)
+        total_time = current_time + self.current_instance.travel_time[current_port][start_port]
+        
+        print(f"Generated solution: {solution}, Total time: {total_time:.2f} / {self.current_instance.time_limit}")
         return solution
     
     def compute_loss(self, reward: float) -> torch.Tensor:
