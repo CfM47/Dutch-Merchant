@@ -11,7 +11,7 @@ mod tests {
             n_ports: 2,
             n_goods: 1,
             travel_time: vec![vec![0.0, 1.0], vec![1.0, 0.0]],
-            travel_cost: 0.0,
+            travel_cost: 1.0,
             weight: vec![1.0],
             buy_price: vec![vec![2.0], vec![0.0]], // Only port 0 sells
             sell_price: vec![vec![0.0], vec![5.0]], // Only port 1 buys
@@ -76,40 +76,29 @@ mod tests {
                 vec![0.0, 0.0],
                 vec![0.0, 5.0],
             ],
-            visit_cost: vec![0.0, 5.0, 5.0, 5.0],
+            visit_cost: vec![0.0, 0.0, 0.0, 0.0],
             start_port: 0,
             capacity: 10.0,
             time_limit: 100.0,
-            initial_capital: 105.0, // Enough for 10 units of Good 0 + visit cost
+            initial_capital: 10105.0, // Enough for 10 units of Good 0 + visit cost
         };
 
         // Route: 0 -> 1 -> 2 -> 3
         let route: Vec<PortId> = vec![0, 1, 2, 3];
-        let calculator = LpProfitCalculator;
-        let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
+        let evaluator = LpProfitCalculator;
+        let (profit, _) = evaluator.calculate_best_profit(&instance, &route);
 
         /* Step-by-Step Logic:
-        1. Port 0: Spend 100 to buy 10 units of Good 0. Capital left: 5.
-        2. Port 1: Pay 5 (visit cost). Capital: 0. Sell 10 units of Good 0 for 200.
-            New Capital: 200.
-        3. Port 2: Pay 5 (visit cost). Capital: 195.
-            Wait! Good 1 costs 200. The merchant is 5 short!
-            This tests if the logic handles "almost enough" capital or if it buys
-            partially (if allowed) or fails gracefully.
-
-        Optimized outcome:
-        If the merchant bought only 9 units of Good 0 at Port 0:
-        - Cost: 90. Capital left: 15.
-        - Port 1: Cost 5. Capital: 10. Sell 9 units for 180. Total: 190.
-        - Port 2: Cost 5. Capital 185. Still can't afford Good 1!
-
-        Correct strategy:
-        The merchant must manage the visit costs S(v) effectively across the whole route.
+            1. Port 0: Spend 100 to buy 10 units of Good 0, spend 1000 to buy 5 units of Good 1. Capital left: -995+10000.
+            2. Port 1: Sell 10 units of Good 0 for 200. New Capital: -795+10000.
+            3. Port 2: does nothing. Capital: -795+10000.
+            4. Port 3: Sell 5 units of Good 1 for 5000. New Capital: 4205+10000.
         */
 
         assert!(
-            profit > 105.0,
-            "The merchant should at least make more than initial capital"
+            (profit - 14205.0).abs() < 1e-6,
+            "Expected profit 14205.0, got {}",
+            profit
         );
     }
 }

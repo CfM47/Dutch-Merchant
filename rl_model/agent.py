@@ -170,7 +170,7 @@ class PolicyGradientAgent(nn.Module):
             solution.append(next_port)
             current_port = next_port
             visited.add(next_port)
-        
+        print(f"Generated solution: {solution}")
         return solution
     
     def compute_loss(self, reward: float) -> torch.Tensor:
