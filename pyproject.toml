@@ -21,6 +21,9 @@ cache-keys = [
   { file = "**/*.rs" },
 ]
 
+[tool.maturin]
+features = ["python"]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
