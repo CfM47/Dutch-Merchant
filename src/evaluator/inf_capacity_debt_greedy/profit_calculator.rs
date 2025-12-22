@@ -1,9 +1,3 @@
-use std::{
-    cmp::{Ordering, Reverse},
-    collections::BinaryHeap,
-    vec,
-};
-
 use crate::{
     evaluator::path_evaluator::PathEvaluator,
     model::instance::{Instance, PortId},
@@ -22,41 +16,21 @@ impl InfiniteCapacityDebtEvaluator {
     }
 }
 
-#[derive(PartialEq, PartialOrd, Copy, Clone)]
-struct HeapItem {
-    price: f64,
-    idx: usize,
-}
-
-impl HeapItem {
-    fn new(price: f64, idx: usize) -> Self {
-        HeapItem {
-            price: price,
-            idx: idx,
-        }
-    }
-}
-
-impl Ord for HeapItem {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.price.partial_cmp(&self.price).unwrap()
-    }
-}
-
-impl Eq for HeapItem {}
-
 impl PathEvaluator for InfiniteCapacityDebtEvaluator {
     fn name(&self) -> &'static str {
         return "InfiniteCapacityDebtEvaluator";
     }
 
-    fn calculate_best_profit(&self, instance: &Instance, nodes: &[PortId]) -> (f64, Vec<Vec<(f64, f64)>>) {
+    fn calculate_best_profit(
+        &self,
+        instance: &Instance,
+        nodes: &[PortId],
+    ) -> (f64, Vec<Vec<(f64, f64)>>) {
         let n_goods = instance.n_goods;
         let n_ports = nodes.len();
 
         let mut capital = instance.initial_capital;
         // q[j][m]
-        // TODO: fix this into a vec of tuples
         let mut decisions: Vec<Vec<(f64, f64)>> = vec![vec![(0.0, 0.0); n_goods]; n_ports];
 
         for m in 0..n_goods {
@@ -66,37 +40,37 @@ impl PathEvaluator for InfiniteCapacityDebtEvaluator {
             let mut buy_cap: Vec<f64> = nodes.iter().map(|x| instance.buy_cap[*x][m]).collect();
             let mut sell_cap: Vec<f64> = nodes.iter().map(|x| instance.sell_cap[*x][m]).collect();
 
-            let mut sell_heap = BinaryHeap::new();
+            let mut sell_order: Vec<(PortId, usize)> =
+                nodes.iter().enumerate().map(|(i, x)| (*x, i)).collect();
+            sell_order
+                .sort_by(|(a, _), (b, _)| sell_prices[*b].partial_cmp(&sell_prices[*a]).unwrap());
 
-            for i in 0..nodes.len() {
-                sell_heap.push(HeapItem::new(sell_prices[i], i));
-            }
+            let mut buy_order: Vec<(PortId, usize)> =
+                nodes.iter().enumerate().map(|(i, x)| (*x, i)).collect();
+            buy_order
+                .sort_by(|(a, _), (b, _)| buy_prices[*a].partial_cmp(&buy_prices[*b]).unwrap());
 
-            while !sell_heap.is_empty() {
-                let v_i = sell_heap.pop().unwrap();
-                let sell_price = v_i.price;
-                let i = v_i.idx;
+            for i in 0..sell_order.len() {
+                let sell_price = sell_prices[sell_order[i].0];
+                let sell_idx = sell_order[i].1;
 
-                let mut buy_heap = BinaryHeap::new();
+                for j in 0..buy_order.len() {
+                    if sell_cap[sell_idx] <= 0.0 {
+                        break;
+                    }
+                    let buy_price = buy_prices[buy_order[j].0];
+                    let buy_idx = buy_order[j].1;
 
-                for j in 0..i {
-                    buy_heap.push(Reverse(HeapItem::new(buy_prices[j], j)));
-                }
-
-                while sell_cap[i] > 0.0 && !buy_heap.is_empty() {
-                    let v_j = buy_heap.pop().unwrap().0;
-                    let buy_price = v_j.price;
-                    let j = v_j.idx;
-
-                    if sell_price <= buy_price {
+                    if sell_price <= buy_price || buy_idx >= sell_idx || buy_cap[buy_idx] <= 0.0 {
                         continue;
                     }
-                    let x = sell_cap[i].min(buy_cap[j]);
 
-                    decisions[j][m].0 += x;
-                    decisions[i][m].1 += x;
-                    sell_cap[i] -= x;
-                    buy_cap[j] -= x;
+                    let x = sell_cap[sell_idx].min(buy_cap[buy_idx]);
+
+                    decisions[buy_idx][m].0 += x;
+                    decisions[sell_idx][m].1 += x;
+                    sell_cap[sell_idx] -= x;
+                    buy_cap[buy_idx] -= x;
 
                     capital += x * (sell_price - buy_price)
                 }
