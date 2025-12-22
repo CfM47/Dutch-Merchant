@@ -9,6 +9,35 @@ from dm_solution import Instance as RustInstance, RandomConfig, generate_random_
 from rl_model.solver import Solver as RLSolver
 from rl_model.schemas import Instance as RLInstance
 
+def count_time_paths(rust_inst):
+    """Count number of valid cycles starting and ending at start_port within the time limit."""
+    n_ports = rust_inst.n_ports
+    start_port = rust_inst.start_port
+    time_limit = rust_inst.time_limit
+    travel_time = rust_inst.travel_time
+    
+    count = 0
+    
+    def dfs(current_port, current_time, visited):
+        nonlocal count
+        
+        # Try to return to start port
+        time_to_start = travel_time[current_port][start_port]
+        if current_time + time_to_start <= time_limit:
+            count += 1
+            
+        # Explore other ports
+        for next_port in range(n_ports):
+            if next_port != start_port and next_port not in visited:
+                travel = travel_time[current_port][next_port]
+                if current_time + travel <= time_limit:
+                    visited.add(next_port)
+                    dfs(next_port, current_time + travel, visited)
+                    visited.remove(next_port)
+
+    dfs(start_port, 0.0, set())
+    return count
+
 def rust_instance_to_rl_instance(rust_inst):
     """Convert a Rust Instance object to an RL Instance schema."""
     data = {
@@ -57,15 +86,23 @@ def run_experiment(num_cases, config):
 
         ratio = (rl_profit / bf_profit if bf_profit > 0 else (1.0 if rl_profit == 0 else 0.0))
         
+        # Path Counting
+        n_paths = count_time_paths(rust_inst)
+
         results.append({
             "case": i + 1,
+            "num_ports": rust_inst.n_ports,
+            "num_of_goods": rust_inst.n_goods,
+            "initial_capital": rust_inst.initial_capital,
+            "limit_time": rust_inst.time_limit,
+            "capacity": rust_inst.capacity,
+            "n_paths": n_paths,
             "bf_profit": bf_profit,
             "rl_profit": rl_profit,
             "ratio": ratio
         })
         
-        if (i + 1) % 10 == 0:
-            print(f"Completed {i + 1}/{num_cases} cases...")
+        print(f"Completed {i + 1}/{num_cases} cases...")
 
     return results
 
@@ -124,8 +161,8 @@ Generated on: {now}
 
 ## Experiment Configuration
 - **Number of Cases**: {stats_dict['n_samples']}
-- **Ports**: {config.n_ports}
-- **Goods**: {config.n_goods}
+- **Ports Range**: {config.n_ports_range}
+- **Goods Range**: {config.n_goods_range}
 - **Time Limit Range**: {config.time_limit_range}
 - **RL Hyperparameters**: 50 epochs, 5 episodes/epoch
 
@@ -214,8 +251,8 @@ Based on the statistical analysis, the RL solver {'shows promise as an approxima
 
 def main():
     config = RandomConfig(
-        n_ports=6,
-        n_goods=3,
+        n_ports_range=(5, 9),
+        n_goods_range=(3, 6),
         travel_time_range=(5.0, 20.0),
         price_range=(50.0, 150.0),
         weight_range=(1.0, 5.0),
@@ -223,11 +260,13 @@ def main():
         time_limit_range=(80.0, 150.0),
         initial_capital_range=(500.0, 2000.0),
         visit_cost_range=(0.0, 10.0),
-        travel_cost_range=(0.1, 0.5)
+        travel_cost_range=(0.1, 0.5),
+        value_type="float",
+        max_value=100.0
     )
 
-    # Run 300 cases
-    results = run_experiment(300, config)
+    # Run 5 cases for verification
+    results = run_experiment(500, config)
     
     # Perform statistical tests
     stats_dict = perform_statistical_tests(results)

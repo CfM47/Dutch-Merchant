@@ -1,11 +1,9 @@
 use std::iter::zip;
 
-use crate::{
-    Instance,
-    generator::star::{
-        GeneratedOffer, GeneratedPathInstance, PathRequest,
-        matrix::{extend_matrix, gapped_array, prepend_column_and_row, prepend_row},
-    },
+use crate::Instance;
+use super::{
+    GeneratedOffer, GeneratedPathInstance, PathRequest,
+    matrix::{extend_matrix, gapped_array, prepend_column_and_row, prepend_row},
 };
 use rand::SeedableRng;
 use rand::prelude::*;
