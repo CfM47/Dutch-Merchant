@@ -46,7 +46,7 @@ class RouteScorer:
         Returns:
             A float representing the score of the solution.
         """
-        answ: Tuple[float, List[List[float]]] = self.evaluator.score_route(
-            nodes, evaluator_name.value
+        answ: Tuple[float, List[List[Tuple[float, float]]]] = (
+            self.evaluator.score_route(nodes, evaluator_name.value)
         )
         return answ[0]  # Return only the score part
