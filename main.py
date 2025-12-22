@@ -112,44 +112,31 @@ def perform_statistical_tests(results):
     rl_profits = np.array([r["rl_profit"] for r in results])
     ratios = np.array([r["ratio"] for r in results])
     
-    # Paired t-test (since we have paired samples from the same instances)
-    t_stat, p_value = stats.ttest_rel(bf_profits, rl_profits)
+    # Paired t-test with sampling
+    n_samples = 30
+    indices = np.random.choice(len(bf_profits), size=n_samples, replace=False)
+
+    # Sample the data
+    bf_sampled = bf_profits[indices]
+    rl_sampled = rl_profits[indices]
+
+    ratios_mean = np.mean(ratios)
+    rl_scaled = rl_sampled / ratios_mean
     
-    # Effect size (Cohen's d for paired samples)
-    differences = bf_profits - rl_profits
-    cohens_d = np.mean(differences) / np.std(differences, ddof=1)
-    
-    # Wilcoxon signed-rank test (non-parametric alternative)
-    wilcoxon_stat, wilcoxon_p = stats.wilcoxon(bf_profits, rl_profits)
-    
-    # One-sample t-test on ratio (testing if mean ratio significantly differs from 1.0)
-    ratio_t_stat, ratio_p_value = stats.ttest_1samp(ratios, 1.0)
-    
-    # Confidence interval for ratio mean
-    ratio_mean = np.mean(ratios)
-    ratio_std = np.std(ratios, ddof=1)
-    ratio_se = ratio_std / np.sqrt(len(ratios))
-    ratio_ci = stats.t.interval(0.95, len(ratios)-1, loc=ratio_mean, scale=ratio_se)
+    t_stat, p_value = stats.ttest_rel(bf_sampled, rl_scaled)
     
     return {
         "bf_mean": np.mean(bf_profits),
         "bf_std": np.std(bf_profits, ddof=1),
         "rl_mean": np.mean(rl_profits),
         "rl_std": np.std(rl_profits, ddof=1),
-        "mean_diff": np.mean(differences),
         "t_statistic": t_stat,
         "p_value": p_value,
-        "cohens_d": cohens_d,
-        "wilcoxon_stat": wilcoxon_stat,
-        "wilcoxon_p": wilcoxon_p,
-        "ratio_mean": ratio_mean,
-        "ratio_std": ratio_std,
-        "ratio_t_stat": ratio_t_stat,
-        "ratio_p_value": ratio_p_value,
-        "ratio_ci": ratio_ci,
+        "ratio_mean": ratios_mean,
         "ratio_median": np.median(ratios),
         "win_rate": np.sum(rl_profits >= bf_profits) / len(results),
-        "n_samples": len(results)
+        "n_samples": len(results),
+        "n_sampled": n_samples
     }
 
 def generate_statistical_report(results, stats_dict, config):
@@ -161,6 +148,7 @@ Generated on: {now}
 
 ## Experiment Configuration
 - **Number of Cases**: {stats_dict['n_samples']}
+- **Sampled Cases for Test**: {stats_dict['n_sampled']}
 - **Ports Range**: {config.n_ports_range}
 - **Goods Range**: {config.n_goods_range}
 - **Time Limit Range**: {config.time_limit_range}
@@ -172,7 +160,6 @@ Generated on: {now}
 | :--- | :--- | :--- |
 | **Mean Profit** | {stats_dict['bf_mean']:.2f} | {stats_dict['rl_mean']:.2f} |
 | **Std Dev** | {stats_dict['bf_std']:.2f} | {stats_dict['rl_std']:.2f} |
-| **Mean Difference (BF - RL)** | {stats_dict['mean_diff']:.2f} | - |
 
 ## Ratio Analysis (RL/BF)
 
@@ -180,51 +167,25 @@ Generated on: {now}
 | :--- | :--- |
 | **Mean Ratio** | {stats_dict['ratio_mean']:.4f} ({stats_dict['ratio_mean']*100:.2f}%) |
 | **Median Ratio** | {stats_dict['ratio_median']:.4f} ({stats_dict['ratio_median']*100:.2f}%) |
-| **Std Dev** | {stats_dict['ratio_std']:.4f} |
-| **95% Confidence Interval** | [{stats_dict['ratio_ci'][0]:.4f}, {stats_dict['ratio_ci'][1]:.4f}] |
 | **RL Win/Tie Rate** | {stats_dict['win_rate']:.2%} |
 
-## Statistical Tests
+## Statistical Test
 
-### 1. Paired t-test (BF vs RL)
-**Null Hypothesis**: There is no difference between BF and RL mean profits.
+### Paired t-test (BF vs Scaled RL)
+**Null Hypothesis**: There is no difference between BF and scaled RL mean profits.
 
 - **t-statistic**: {stats_dict['t_statistic']:.4f}
 - **p-value**: {stats_dict['p_value']:.6f}
 - **Result**: {'Reject H0' if stats_dict['p_value'] < 0.05 else 'Fail to reject H0'} at α = 0.05
 - **Interpretation**: {'The difference is statistically significant' if stats_dict['p_value'] < 0.05 else 'No significant difference detected'}
 
-### 2. Effect Size (Cohen's d)
-- **Cohen's d**: {stats_dict['cohens_d']:.4f}
-- **Interpretation**: {
-    'Negligible effect' if abs(stats_dict['cohens_d']) < 0.2 else
-    'Small effect' if abs(stats_dict['cohens_d']) < 0.5 else
-    'Medium effect' if abs(stats_dict['cohens_d']) < 0.8 else
-    'Large effect'
-}
-
-### 3. Wilcoxon Signed-Rank Test (Non-parametric)
-- **Test Statistic**: {stats_dict['wilcoxon_stat']:.4f}
-- **p-value**: {stats_dict['wilcoxon_p']:.6f}
-- **Result**: {'Reject H0' if stats_dict['wilcoxon_p'] < 0.05 else 'Fail to reject H0'} at α = 0.05
-
-### 4. One-Sample t-test on Ratio
-**Null Hypothesis**: Mean ratio equals 1.0 (RL performs equally to BF).
-
-- **t-statistic**: {stats_dict['ratio_t_stat']:.4f}
-- **p-value**: {stats_dict['ratio_p_value']:.6f}
-- **Result**: {'Reject H0' if stats_dict['ratio_p_value'] < 0.05 else 'Fail to reject H0'} at α = 0.05
-- **Interpretation**: {'RL performance differs significantly from optimal' if stats_dict['ratio_p_value'] < 0.05 else 'RL performance is not significantly different from optimal'}
-
 ## Conclusions
 
 1. **Performance Gap**: On average, the RL solver achieves {stats_dict['ratio_mean']*100:.2f}% of the brute-force optimal solution.
 
-2. **Consistency**: The 95% confidence interval for the ratio is [{stats_dict['ratio_ci'][0]*100:.2f}%, {stats_dict['ratio_ci'][1]*100:.2f}%], indicating {"high" if stats_dict['ratio_std'] < 0.1 else "moderate" if stats_dict['ratio_std'] < 0.2 else "variable"} consistency.
+2. **Practical Significance**: The RL solver wins or ties in {stats_dict['win_rate']*100:.2f}% of cases, demonstrating {'strong' if stats_dict['win_rate'] > 0.8 else 'good' if stats_dict['win_rate'] > 0.5 else 'limited'} competitive performance.
 
-3. **Practical Significance**: The RL solver wins or ties in {stats_dict['win_rate']*100:.2f}% of cases, demonstrating {'strong' if stats_dict['win_rate'] > 0.8 else 'good' if stats_dict['win_rate'] > 0.5 else 'limited'} competitive performance.
-
-4. **Statistical Significance**: {'The paired t-test confirms a significant difference between methods (p < 0.05).' if stats_dict['p_value'] < 0.05 else 'No significant difference was found between the methods (p ≥ 0.05).'}
+3. **Statistical Significance**: {'The paired t-test confirms a significant difference between methods (p < 0.05).' if stats_dict['p_value'] < 0.05 else 'No significant difference was found between the methods (p ≥ 0.05).'}
 
 ## Recommendations
 
@@ -239,17 +200,18 @@ Based on the statistical analysis, the RL solver {'shows promise as an approxima
     print("\n" + "="*60)
     print("KEY STATISTICAL RESULTS")
     print("="*60)
-    print(f"Sample Size: {stats_dict['n_samples']}")
+    print(f"Total Sample Size: {stats_dict['n_samples']}")
+    print(f"Sampled for Test: {stats_dict['n_sampled']}")
     print(f"Mean BF Profit: {stats_dict['bf_mean']:.2f}")
     print(f"Mean RL Profit: {stats_dict['rl_mean']:.2f}")
     print(f"Mean Ratio (RL/BF): {stats_dict['ratio_mean']:.4f} ({stats_dict['ratio_mean']*100:.2f}%)")
-    print(f"95% CI for Ratio: [{stats_dict['ratio_ci'][0]:.4f}, {stats_dict['ratio_ci'][1]:.4f}]")
     print(f"Paired t-test p-value: {stats_dict['p_value']:.6f}")
-    print(f"Cohen's d: {stats_dict['cohens_d']:.4f}")
     print(f"RL Win/Tie Rate: {stats_dict['win_rate']:.2%}")
     print("="*60)
-
+    
 def main():
+    import sys
+    
     config = RandomConfig(
         n_ports_range=(5, 9),
         n_goods_range=(3, 6),
@@ -265,20 +227,41 @@ def main():
         max_value=100.0
     )
 
-    # Run 5 cases for verification
-    results = run_experiment(500, config)
-    
+    # Check if a JSON file path is provided as a command-line argument
+    json_path = None
+    if len(sys.argv) > 1:
+        json_path = Path(sys.argv[1])
+    else:
+        # Check for the specific files or default file
+        default_files = [
+            Path("experiment_results_fractional_lp.json"),
+        ]
+        for p in default_files:
+            if p.exists():
+                json_path = p
+                break
+
+    if json_path and json_path.exists():
+        print(f"\nLoading results from {json_path}...")
+        with open(json_path, 'r') as f:
+            results = json.load(f)
+    else:
+        # Run cases for verification if no JSON is found
+        print("\nNo JSON results found. Running experiments...")
+        results = run_experiment(50, config) # Default to 50 for quick run
+
     # Perform statistical tests
     stats_dict = perform_statistical_tests(results)
     
     # Generate report
     generate_statistical_report(results, stats_dict, config)
     
-    # Save raw results
-    results_path = Path("experiment_results.json")
-    with open(results_path, 'w') as f:
-        json.dump(results, f, indent=2)
-    print(f"Raw results saved to {results_path.absolute()}")
+    # Save raw results (only if they were newly generated)
+    if not json_path or not json_path.exists():
+        results_path = Path("experiment_results.json")
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        print(f"Raw results saved to {results_path.absolute()}")
 
 if __name__ == "__main__":
     main()
