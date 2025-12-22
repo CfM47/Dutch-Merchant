@@ -31,6 +31,9 @@ class Solver:
         episodes_per_epoch: int = 10,
         learning_rate: float = 1e-4,
         baseline_decay: float = 0.99,
+        # Exploration hyperparameters
+        start_temp: float = 200.0,
+        end_temp: float = 0.1,
         verbose: bool = True,
     ):
         """
@@ -46,6 +49,8 @@ class Solver:
             episodes_per_epoch: Number of episodes to collect per epoch.
             learning_rate: Learning rate for the optimizer.
             baseline_decay: Decay rate for the reward baseline.
+            start_temp: Initial temperature for exploration.
+            end_temp: Final temperature for exploitation.
             verbose: Whether to print training progress.
         """
         self.checkpoint_path = checkpoint_path
@@ -57,6 +62,8 @@ class Solver:
         self.episodes_per_epoch = episodes_per_epoch
         self.learning_rate = learning_rate
         self.baseline_decay = baseline_decay
+        self.start_temp = start_temp
+        self.end_temp = end_temp
         self.verbose = verbose
         
         self.agent: Optional[PolicyGradientAgent] = None
@@ -104,8 +111,6 @@ class Solver:
                     print(f"Warning: Failed to load checkpoint from {self.checkpoint_path}: {e}")
                     print("Using initialized weights.")
 
-        # Set the instance for the agent
-        self.agent.receive_instance(instance)
         
         # --- Training Loop ---
         optimizer = optim.Adam(self.agent.parameters(), lr=self.learning_rate)
@@ -121,14 +126,24 @@ class Solver:
 
         self.agent.train()
         for epoch in range(self.num_epochs):
+            # Calculate current temperature (linear decay)
+            if self.num_epochs > 1:
+                temp = self.start_temp + (self.end_temp - self.start_temp) * (epoch / (self.num_epochs - 1))
+            else:
+                temp = self.end_temp
+
             epoch_rewards = []
             epoch_losses = []
             
             for _ in range(self.episodes_per_epoch):
+                # Set the instance for the agent (re-compute features to create fresh graph)
+                self.agent.receive_instance(instance)
+
                 # Generate a solution (exploration enabled)
                 solution = self.agent.generate_solution(
                     greedy=False,
                     return_log_probs=True,
+                    temperature=temp,
                 )
                 
                 # Calculate reward
@@ -153,7 +168,7 @@ class Solver:
             
             if self.verbose and (epoch + 1) % 10 == 0:
                 avg_reward = np.mean(epoch_rewards)
-                print(f"Epoch {epoch + 1}/{self.num_epochs} | Avg Reward: {avg_reward:.4f} | Best: {best_reward:.4f}")
+                print(f"Epoch {epoch + 1}/{self.num_epochs} | Temp: {temp:.4f} | Avg Reward: {avg_reward:.4f} | Best: {best_reward:.4f}")
 
         # --- Inference ---
         # We could return best_solution found during training, 

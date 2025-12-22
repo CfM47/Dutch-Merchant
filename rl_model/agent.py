@@ -113,7 +113,7 @@ class PolicyGradientAgent(nn.Module):
         if self.n_ports != instance.n_ports or self.n_goods != instance.n_goods:
             self.n_ports = instance.n_ports
             self.n_goods = instance.n_goods
-        raw_features = self._encode_instance(instance)
+        raw_features = self._encode_instance(instance).to(next(self.parameters()).device)
         self.instance_features = self.instance_encoder(raw_features)
     
     def select_action(
@@ -121,6 +121,7 @@ class PolicyGradientAgent(nn.Module):
         current_port: int,
         mask: Optional[torch.Tensor] = None,
         greedy: bool = False,
+        temperature: float = 1.0,
     ) -> Tuple[int, Optional[torch.Tensor]]:
         """Select next port to visit."""
         if self.instance_features is None:
@@ -132,7 +133,8 @@ class PolicyGradientAgent(nn.Module):
             action = logits.argmax(dim=-1)
             return action.item(), None
         else:
-            probs = F.softmax(logits, dim=-1)
+            # Apply temperature
+            probs = F.softmax(logits / max(temperature, 1e-6), dim=-1)
             dist = Categorical(probs)
             action = dist.sample()
             log_prob = dist.log_prob(action)
@@ -142,6 +144,7 @@ class PolicyGradientAgent(nn.Module):
         self, 
         greedy: bool = False,
         return_log_probs: bool = False,
+        temperature: float = 1.0,
     ) -> List[int]:
         """Generate a complete solution (sequence of ports)."""
         if self.current_instance is None:
@@ -162,7 +165,9 @@ class PolicyGradientAgent(nn.Module):
             if mask.all():
                 break
             
-            next_port, log_prob = self.select_action(current_port, mask, greedy)
+            next_port, log_prob = self.select_action(
+                current_port, mask, greedy, temperature
+            )
             
             if return_log_probs and log_prob is not None:
                 self.saved_log_probs.append(log_prob)
