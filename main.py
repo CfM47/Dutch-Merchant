@@ -1,6 +1,5 @@
-
 from rl_model import Solver
-from rl_model.schemas import Instance
+from rl_model.schemas import Instance, ValueType
 
 
 def create_test_instance():
@@ -47,17 +46,21 @@ def create_test_instance():
         initial_capital=10105.0,
     )
 
+
 if __name__ == "__main__":
     # Initialize the solver
     solver = Solver()
     print("Solver initialized.")
 
     # Get a problem instance
-    instance = create_test_instance()
-    print(f"Loaded instance with {instance.n_ports} ports and {instance.n_goods} goods.")
+    # instance = create_test_instance()
+    instance = Instance.generate(42, 4, 2, ValueType.Fractional, 100)
+    print(
+        f"Loaded instance with {instance.n_ports} ports and {instance.n_goods} goods."
+    )
 
     # Solve the instance
     solution = solver.solve(instance)
-    
+
     # Print the result
     print(f"Solution: {solution}")

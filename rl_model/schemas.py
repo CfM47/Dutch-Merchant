@@ -4,13 +4,21 @@ Pydantic schemas for the Dutch Merchant problem instance.
 This mirrors the Rust Instance struct from dm-solution/src/model/instance.rs
 """
 
-from typing import List
+from enum import StrEnum
+from typing import List, Optional, Self
 from pydantic import BaseModel, Field
+
+from dm_solution import generate_instance
 
 
 # Type aliases for clarity
 PortId = int
 GoodId = int
+
+
+class ValueType(StrEnum):
+    Integer = "Integer"
+    Fractional = "Fractional"
 
 
 class Instance(BaseModel):
@@ -101,3 +109,15 @@ class Instance(BaseModel):
                 "initial_capital": 1000.0,
             }
         }
+
+    @classmethod
+    def generate(
+        cls,
+        seed: Optional[int],
+        n_ports: int,
+        n_goods: int,
+        value_type: ValueType,
+        max_value: float,
+    ) -> Self:
+        s = generate_instance(seed, n_ports, n_goods, value_type.value, max_value)
+        return cls.model_validate_json(s)
