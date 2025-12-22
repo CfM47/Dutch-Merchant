@@ -1,6 +1,6 @@
 # Subproblema: Maximizando ganancia dado un camino
 
-## Definición formal del subproblema
+## Definición formal del subproblema0
 
 Sea $R = (v_0, v_1, \dots, v_r, v_0)$ un camino (ruta) factible de puertos.
 Queremos determinar las transacciones $Q = (q_1, \dots, q_r)$ que maximizan:
@@ -27,95 +27,129 @@ Asumiendo $B=+\infty$ y $f_j$ libre, las restricciones de capacidad y capital no
 
 * Cada puerto impone **stock máximo** en compra/venta y **dirección temporal**: solo se puede vender algo que ya se haya comprado en un puerto anterior.
 
-* Esto define un problema de **emparejamiento temporal entre compras y ventas** para cada mercancía.
+* Esto define un problema de **emparejamiento entre compras y ventas** para cada mercancía.
 
----
+## Idea del algoritmo
 
-## Idea del algoritmo (greedy temporal por mercancía)
+La mayor ganancia global que podemos obtener para una instancia de la mercancía $m$ es comprarla donde más barato se venda, y venderla en el puerto siguiente donde más caro se compre. No tiene sentido comprar una unidad de mercancía si luego no se puede vender.
 
-Para cada mercancía $m$:
+- Añadimos todas los puertos $v_i$ a un heap $H_1$ de máximos, tomando como llave su precio de venta $p^-_i$.
+- Mientras que el $H_1$ no este vacío (existe una posible venta)
+  - Sea $v_i = \text{pop}(H_1)$ el puerto con precio de venta mas alto.
+  - Para cada puerto $v_j$ con $j < i$ (vienen antes en la ruta) los añadimos a un heap de mínimos $H_2$, con su precio de compra $p^+_j$ como llave.
+  - Mientras que $c^-_i \geq 0$ y $H_2$ no este vacío (exista una posible compra):
+    - Sea $v_j = \text{pop}(H_2)$ el puerto con el menor precio de compra.
+    - Si $p^-_i \leq p^+_j$ continua (no hay ganancia).
+    - En caso contrario:
+    - $q^-_i = q^+_j= x =\text{min}(c^-_i, c^+_j)$ (compra en $v_j$ todas las unidades que puedas vender en $v_i$) 
+    - $c^-_i := c^-_i - x$ decrementa la cantidad posible a vender de $v_i$ en $x$
+    - $c^+_j := c^+_j - x$ decrementa la cantidad posible a comprar de $v_j$ en $x$.
 
-1. Recorremos la ruta $R$ en orden temporal (desde $v_0$ hasta $v_r$).
+## Demostración de correctitud.
 
-2. Mantenemos una lista de **compras previas disponibles**, ordenadas por precio creciente.
+Consideramos el subproblema de maximizar la ganancia total asociada a una ruta fija
+$$
+R = (v_0, v_1, \dots, v_r, v_0)
+$$
+bajo las siguientes asunciones:
 
-3. Cada vez que llegamos a un puerto con demanda $c^-(v_j,m)$, emparejamos la demanda con las compras previas más baratas posibles:
+* La capacidad del barco es infinita $(B = +\infty)$.
+* El capital puede ser negativo $(f_j \in \mathbb{R})$.
+* No existen interacciones entre mercancías distintas más allá de la suma de ganancias.
 
-   $$
-   \text{take} = \min(\text{cantidad disponible de la compra}, \text{demanda})
-   $$
+Denotamos este subproblema como **MAX-PROFIT(R)**.
 
-4. Actualizamos inventario, demanda y ganancia.
+### Lema 1 (Independencia entre mercancías)
 
----
+La función objetivo del problema puede escribirse como
+$$
+f_{r+1}
+= f_0 + \sum_{m \in M}
+\sum_{j=1}^{r}
+\bigl(
+p^-(v_j,m)q^-_j(m) -
+p^+(v_j,m)q^+_j(m)
+\bigr).
+$$
 
-## Pseudocódigo
+Bajo las asunciones (B = +\infty) y (f_j \in \mathbb{R}), las restricciones de factibilidad se descomponen por mercancía, es decir, no existe ninguna restricción que involucre simultáneamente decisiones asociadas a mercancías distintas.
 
-```text
-GreedyMaxProfit(R, m):
-    # R: lista de puertos en orden temporal
-    # m: mercancía
-    heap = empty min-heap keyed by buy_price
-    profit = 0
-    matches = []
+Por lo tanto, maximizar la ganancia total es equivalente a maximizar, de manera independiente, la ganancia asociada a cada mercancía.
 
-    for j in 1..r:
-        # 1) añadir compras al heap
-        if c^+(v_j, m) > 0:
-            heap.push( (p^+(v_j, m), c^+(v_j,m), j) )
+$\square$
 
-        # 2) procesar ventas
-        demand = c^-(v_j, m)
-        while demand > 0 and heap not empty:
-            (bprice, avail, bidx) = heap.pop_min()
-            take = min(avail, demand)
-            matches.append( (bidx, j, take) )
-            profit += take * (p^-(v_j,m) - bprice)
-            avail -= take
-            demand -= take
-            if avail > 0:
-                heap.push( (bprice, avail, bidx) )
-    return matches, profit
-```
+### Reformulación del subproblema para una mercancía fija
 
-* `matches` indica qué cantidad de la compra en puerto `bidx` se empareja con venta en puerto `j`.
-* Repetimos esto para cada mercancía $m \in M$.
-* Suma de `profit` sobre todas las mercancías da la **ganancia máxima** posible para el camino $R$.
+Fijemos una mercancía $m$. Para cada puerto $v_i$ de la ruta se definen:
 
----
+* $c^+_i \ge 0$: capacidad máxima de compra a precio $p^+_i$,
+* $c^-_i \ge 0$: capacidad máxima de venta a precio $p^-_i$.
 
-## Correctitud (demostración de optimalidad)
+Al no poder comprarse mas unidades de las que se vende, ni ser optimo comprar una unidad para no venderla, una solución factible queda completamente caracterizada por un conjunto de emparejamientos unitarios
+$$
+(i,j), \quad i < j,
+$$
+donde cada emparejamiento representa una unidad comprada en $v_i$ y vendida en $v_j$, respetando las capacidades $c^+_i$ y $c^-_j$.
 
-**Propiedad a demostrar:** El algoritmo anterior produce la asignación de compras y ventas que **maximiza la ganancia total** para cada mercancía (m).
+La ganancia asociada a una pareja $(i,j)$ es $p^-_j - p^+_i$.
 
-**Demostración por intercambio:**
 
-1. Sea $S^*$ una solución óptima con transacciones $Q^*$.
+### Lema 2 (Estructura de las soluciones óptimas)
 
-2. Supongamos que existe un puerto $v_j$ con venta de $d$ unidades que **no utiliza una compra previa más barata posible** sino una compra más cara.
+Sea $\mathcal{O}$ una solución óptima para una mercancía fija.
 
-   * Sea $c_1$ la compra utilizada por $v_j$ y $c_2$ la compra más barata disponible (no usada para esta venta).
-   * Por definición del greedy, $p^+(c_2) \le p^+(c_1)$ y la venta es la misma $p^-(v_j)$.
+1. **No existen emparejamientos no rentables.**
+   Toda unidad emparejada $(i,j)$ en $\mathcal{O}$ satisface $p^-_j - p^+_i \ge 0.$
+2. **Saturación de emparejamientos rentables.**
+   Para todo puerto $v_j$, si en $\mathcal{O}$ se tiene $q^-_j < c^-_j$, entonces no existe ningún puerto $v_i$ con $i<j$ tal que $q^+_i < c^+_i$ y $p^-_j - p^+_i > 0$
 
-3. **Intercambio:** reasignamos la venta de $v_j$ de $c_1$ a $c_2$.
+#### Demostración
 
-   * Ganancia marginal de $c_2$ ≥ ganancia marginal de $c_1$
-     $$
-     p^-(v_j) - p^+(c_2) \ge p^-(v_j) - p^+(c_1)
-     $$
-   * Todas las demás restricciones siguen cumplidas: inventario ≥ 0 y stocks máximos respetados.
+1. Supóngase que una unidad comprada en $v_i$ se vende en $v_j$ con $p^-_j - p^+_i < 0$. Eliminando dicho emparejamiento se obtiene una solución factible con ganancia estrictamente mayor, contradiciendo la optimalidad. El caso $p^-_j - p^+_i = 0$ puede eliminarse sin afectar la ganancia total.
 
-4. Se tiene que la solucion greedy es tan buena como la solucion optima $\mathcal{G} \geq S^*$.
+2. Si existiera un puerto $v_i$ con $i<j$, capacidad disponible de compra, y $p^-_j - p^+_i > 0$, entonces agregar una unidad comprada en $v_i$ y vendida en $v_j$ incrementaría estrictamente la ganancia, contradiciendo nuevamente la optimalidad de $\mathcal{O}$.
 
-**Conclusión:** Existe una solución óptima donde cada venta se empareja con las compras previas más baratas posibles. El algoritmo produce exactamente esa solución.
+$\square$
 
-* **Complejidad:** $O(|M|*r log r)$ por mercancía.
+### **Lema 3 (Maximalidad del número de emparejamientos)**
 
----
+Las soluciones del algoritmo greedy contienen tantos emparejamientos retables como cualquier solucion óptima.
 
-## Observaciones finales
+#### Demostración
 
-* Bajo las relajaciones de capacidad infinita y capital libre, **cada mercancía se puede optimizar independientemente**.
-* La ganancia máxima total es simplemente la **suma de ganancias óptimas por mercancía**.
-* Este algoritmo **reduce el subproblema de optimización de Q a un problema greedy temporal de asignación**, con demostración de optimalidad formal por intercambio.
+Supongamos que el algoritmo greedy termina con una solución $\mathcal{G}$ y que existe otra solución factible $\mathcal{O}$ con más emparejamientos rentables.
 
+Entonces, en el momento en que el algoritmo greedy se detiene, no existe ningún par $(i,j)$ con capacidad disponible y $p^-_j - p^+_i > 0$.
+
+Pero entonces $\mathcal{O}$ tampoco puede contener tal emparejamiento, pues violaría el Lema 2.
+
+Por lo tanto, ninguna solución factible puede contener más emparejamientos rentables que el greedy.
+
+$\square$
+
+### Teorema (Correctitud del algoritmo greedy)
+
+El algoritmo greedy descrito produce una solución óptima para **MAX-PROFIT(R)**.
+
+#### Demostración
+
+Consideremos una mercancía fija. El algoritmo procede iterativamente emparejando unidades:
+
+* selecciona el puerto $v_j$ con mayor precio de venta disponible,
+* lo empareja con el puerto $v_i$ con $i < j$ con menor precio de compra disponible tal que $p^-_j - p^+_i > 0$.
+
+Demostraremos por inducción sobre el número de emparejamientos que el algoritmo greedy **always stays ahead** de cualquier solución óptima.
+
+**Caso base.**
+En el primer emparejamiento, el algoritmo selecciona el mayor $p^-_j$ posible y el menor $p^+_i$ posible con $i<j$, maximizando la ganancia del primer emparejamiento. Ninguna solución óptima puede obtener una ganancia mayor en su primer emparejamiento.
+
+**Paso inductivo.**
+Supongamos que tras $k$ emparejamientos, la ganancia acumulada del algoritmo greedy es al menos la de cualquier solución óptima parcial con $k$ emparejamientos. En el paso $k+1$, el greedy selecciona el emparejamiento con mayor ganancia disponible restante. Luego, tras el emparejamiento $k+1$, el greedy continúa manteniéndose por delante.
+
+Por el Lema 3, el greedy y realiza tantos emparejamientos como cualquier solucion óptima. Por tanto, al finalizar, la ganancia total del greedy es al menos la de cualquier solución óptima.
+
+$\square$
+
+### Corolario
+
+Dado que el problema global se descompone por mercancía (Lema 1), aplicar el algoritmo greedy de manera independiente a cada mercancía produce una solución óptima global para **MAX-PROFIT(R)**.
