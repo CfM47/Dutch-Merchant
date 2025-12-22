@@ -100,3 +100,55 @@ fn test_calculate_best_profit_liquidity_and_multi_stop() {
         "The merchant should at least make more than initial capital"
     );
 }
+
+#[test]
+fn test_pair_greatest_sell_to_greatest_buy() {
+    // 3 ports, 1 good
+    let instance = Instance {
+        n_ports: 3,
+        n_goods: 1,
+        travel_time: vec![
+            vec![0.0, 1.0, 1.0],
+            vec![1.0, 0.0, 1.0],
+            vec![1.0, 1.0, 0.0],
+        ],
+        travel_cost: 0.0,
+        weight: vec![1.0],
+        buy_price: vec![
+            vec![2.0],
+            vec![0.0],
+            vec![0.0],
+        ],
+        sell_price: vec![
+            vec![0.0],
+            vec![5.0],
+            vec![10.0],
+        ],
+        buy_cap: vec![
+            vec![1.0],
+            vec![0.0],
+            vec![0.0],
+        ],
+        sell_cap: vec![
+            vec![0.0],
+            vec![1.0],
+            vec![1.0],
+        ],
+        visit_cost: vec![0.0, 0.0, 0.0],
+        start_port: 0,
+        capacity: 1000000.0,
+        time_limit: 100000.0,
+        initial_capital: 0.0, // Enough for 10 units of Good 0 + visit cost
+    };
+
+    // Route: 0 -> 1 -> 2
+    let route: Vec<PortId> = vec![0, 1, 2];
+    let evaluator = InfiniteCapacityDebtEvaluator::new();
+    let (profit, _) = evaluator.calculate_best_profit(&instance, &route);
+
+    assert!(
+        (profit - 8.0).abs() < 1e-6,
+        "Invalid profit: Expected 8, got {}",
+        profit
+    );
+}
