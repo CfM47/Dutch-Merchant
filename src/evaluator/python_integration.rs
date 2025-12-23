@@ -2,7 +2,7 @@ use pyo3::{exceptions::PyValueError, prelude::*};
 
 use crate::{
     evaluator::{
-        InfiniteCapacityDebtEvaluator, IntervalEvaluator, LpProfitCalculator,
+        InfiniteCapacityDebtEvaluator, IntegerBruteForce, IntervalEvaluator, LpProfitCalculator,
         path_evaluator::PathEvaluator as PathEvaluatorTrait,
     },
     model::instance::Instance,
@@ -14,6 +14,7 @@ pub struct PathEvaluator {
     interval_evaluator: IntervalEvaluator,
     lp_evaluator: LpProfitCalculator,
     inf_capacity_debt_evaluator: InfiniteCapacityDebtEvaluator,
+    integer_brute_force_evaluator: IntegerBruteForce,
 }
 
 #[pymethods]
@@ -28,6 +29,7 @@ impl PathEvaluator {
             interval_evaluator: IntervalEvaluator::new(),
             lp_evaluator: LpProfitCalculator::new(),
             inf_capacity_debt_evaluator: InfiniteCapacityDebtEvaluator::new(),
+            integer_brute_force_evaluator: IntegerBruteForce::new(),
         }
     }
 
@@ -43,6 +45,8 @@ impl PathEvaluator {
             &self.lp_evaluator
         } else if evaluator_name == self.inf_capacity_debt_evaluator.name() {
             &self.inf_capacity_debt_evaluator
+        } else if evaluator_name == self.integer_brute_force_evaluator.name() {
+            &self.integer_brute_force_evaluator
         } else {
             return Err(PyValueError::new_err("Unsupported evaluator name"));
         };
