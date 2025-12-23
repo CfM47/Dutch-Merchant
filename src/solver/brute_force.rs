@@ -1,16 +1,16 @@
 use crate::evaluator::path_evaluator::PathEvaluator;
-use crate::evaluator::LpProfitCalculator;
+use crate::evaluator::IntegerBruteForce;
 use crate::model::{instance::Instance, solution::Solution};
 use crate::solver::solver::Solver;
 
 pub struct BruteForceSolver {
-    evaluator: LpProfitCalculator,
+    evaluator: IntegerBruteForce,
 }
 
 impl BruteForceSolver {
     pub fn new() -> Self {
         Self {
-            evaluator: LpProfitCalculator::new(),
+            evaluator: IntegerBruteForce::new(),
         }
     }
 
