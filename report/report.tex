@@ -119,13 +119,13 @@ A continuación se presenta una descripción informal del desafío abordado en e
         \item La capacidad de carga de su barco es limitada, por lo que no puede llevar más de lo que su bodega permite.
         \item No es necesario vender todas las mercancías al llegar a un puerto; el capitán puede decidir retener parte de su cargamento si cree que podrá venderlo a un precio más alto en un puerto posterior.
         \item Debe asegurarse de que, después de cada operación de compra, le quede suficiente dinero para cubrir los salarios de la tripulación, los impuestos portuarios y las posibles reparaciones del barco hasta el siguiente destino.
-        \item El tiempo es oro; la duración total del viaje, incluyendo el tiempo de navegación entre puertos, no debe exceder el plazo fijado por los inversores. El objetivo del capitán es claro: planificar la ruta y las transacciones en cada puerto de tal manera que, al regresar a Amsterdam, el capital final de la expedición sea el máximo posible, superando con creces la inversión inicial.
+        \item El tiempo es oro; la duración total del viaje, incluyendo el tiempo de navegación entre puertos, no debe exceder el plazo fijado por los inversores. El objetivo del capitán es claro: planificar la ruta y las transacciones en cada puerto de tal manera que, al regresar a Ámsterdam, el capital final de la expedición sea el máximo posible, superando con creces la inversión inicial.
     \end{itemize}
 \end{quote}
-Basada en la descripción informal previa, se presenta una formulación matemática rigurosa del problema y sus soluciones. 
+Con base en la descripción informal previa, se presenta una formulación matemática rigurosa del problema y sus soluciones. 
 
 \begin{definition}[Problema del Comerciante Holandés]
-    Una instancia del problema del Comerciante Holandés (a partir de ahora se referirá a este como CH) se define como una tupla:
+    Una instancia del problema del Comerciante Holandés (en adelante CH) se define como una tupla:
     $$
     \mathcal{I} = (V, t, \kappa, S, M, w, p^+, p^-, c^+, c^-, B, v_0, f_0, T)
     $$
@@ -153,9 +153,9 @@ Basada en la descripción informal previa, se presenta una formulación matemát
 Una solución del problema CH es un par $(R, Q)$
 donde:
     \begin{itemize}
-        \item $R = (v_0, v_{i_1}, \dots, v_{i_r}, v_0)$ es una ruta factible con las condiciones:
+        \item $R = (v_{i_0}=v_0, v_{i_1}, \dots, v_{i_r}, v_{i_0})$ es una ruta factible con las condiciones:
             $$
-            v_{i_j} \neq v_{i_k} \quad \forall j,k \in \{1...r\}
+            v_{i_j} \neq v_{i_k} \quad \forall j,k \in \lbrace 1...r \rbrace
             $$ 
             
             $$
@@ -170,14 +170,14 @@ donde:
     \end{itemize}
 \end{definition}
 
-También sera necesario definir, el estado del barco y las restricciones por puerto
+También será necesario definir el estado del barco y las restricciones por puerto
 
 \begin{definition}[Estado del barco]
     El estado del barco al llegar al puerto $v_{i_j}$ se define como:
     $$
     \Sigma_j = (f_j, I_j)
     $$
-    donde $f_j \in \mathbb{R}*{\ge 0}$ es el capital disponible y $I_j : M \to \mathbb{R}*{\ge 0}$ es el inventario a bordo. El estado inicial es $\Sigma_0 = (f_0, I_0)$ con $I_0(m) = 0$ para toda mercancía $m$.
+    donde $f_j \in \mathbb{R}_{\ge 0}$ es el capital disponible y $I_j : M \to \mathbb{R}_{\ge 0}$ es el inventario a bordo. El estado inicial es $\Sigma_0 = (f_0, I_0)$ con $I_0(m) = 0$ para toda mercancía $m$.
 \end{definition}
 
 \begin{definition}[Restricciones de transición]
@@ -185,10 +185,10 @@ También sera necesario definir, el estado del barco y las restricciones por pue
 \begin{itemize}
     \item Inventario:
         $$
-        I_{j+1}(m) = I_j(m) - q^-_j(m) + q^+_j(m), 
+        I_{j+1}(m) = I_j(m) - q^-_j(m) + q^+_j(m) 
         $$
         $$
-        I_{j+1}(m) \ge 0, 
+        I_{j+1}(m) \ge 0
         $$
         $$
         0 \le q^-_j(m) \le I_j(m)
@@ -221,7 +221,7 @@ También sera necesario definir, el estado del barco y las restricciones por pue
 \end{itemize}
 \end{definition}
 
-Queda definido el problema CH como un problema optimización con:
+Queda definido el problema CH como un problema de optimización con:
 \begin{definition}[Función objetivo]
     La función objetivo es maximizar el capital final al retornar al puerto de origen:
         $$
@@ -247,26 +247,26 @@ Para comprender la dificultad intrínseca de CH, se analiza su versión de decis
 \end{definition}
 
 Se toma como referencia el conocido \textit{Problema del Viajante} o \textit{Traveling Salesman Problem} (TSP) en su versión de decisión. 
-% aqui deberiamos poner una referencia si lo creemos necesario.
+% aquí deberíamos poner una referencia si lo creemos necesario.
 
 \begin{definition}[Problema del viajante (TSP)]
-    Dado un grafo completo $G=(V,E)$ con función de pesos $d:E\to \mathbb{R}^+$ y un umbral $D\in\mathbb{R}^+$, existe un ciclo Hamiltoniano que visite todos los vértices exactamente una vez y cuyo costo total no exceda $D$.
+    Dado un grafo completo $G=(V,E)$ con función de pesos $d:E\to \mathbb{R}^+$ y un umbral $D\in\mathbb{R}^+$, ¿existe un ciclo Hamiltoniano que visite todos los vértices exactamente una vez y cuyo costo total no exceda $D$?.
 \end{definition}
 El TSP de decisión es un problema conocido NP-completo y por tanto NP-duro.
 
 Nótese que el problema requiere visitar un conjunto de puertos sin repeticiones, decidir qué mercancías comprar y vender en cada puerto y planificar la ruta de modo que la secuencia de visitas respete un límite de tiempo total. La combinación de estos elementos sugiere que, para lograr la máxima ganancia, el capitán debe resolver un problema que, en esencia, contiene la dificultad de encontrar un ciclo Hamiltoniano de costo mínimo en un grafo completo ponderado, es decir, un problema equivalente al TSP. Esta analogía permite entender intuitivamente por qué CH es un problema NP-duro. 
 
-La idea general de la demostración que se presenta a continuación, consiste en forzar a que el comerciante tenga que todos los puertos para recoger todas las unidades de mercancía necesarias para alcanzar $K$. Para esto se crea un grafo donde cada puerto distinto del origen contiene una única unidad de mercancía, el único puerto vendedor es el origen, y $K=|V|-1$. 
+La idea general de la demostración que se presenta a continuación, consiste en forzar a que el comerciante tenga que todos los puertos para recoger todas las unidades de mercancía necesarias para alcanzar $K$. Para esto se crea un grafo donde cada puerto distinto del origen contiene una única unidad de mercancía, el único puerto vendedor es el origen y $K=|V|-1$. 
 
 \begin{theorem}
 CH es NP-duro.
 \end{theorem}
 
 \begin{proof}
-Sea una instancia de TSP $V_{TSP}, d, D)$. Se construye una instancia de CH-DEC como sigue:
+Sea una instancia de TSP $(V_{TSP}, d, D)$ con $n = |V_{TSP}|$. Se construye una instancia de CH-DEC como sigue:
     \begin{itemize}
         \item Puertos, tiempos y costos de viaje: $V = V_{TSP}$, $t(u,v) = d(u,v)$, $\kappa(u,v)=0$, puerto inicial $v_0$.
-        \item Mercancías: $M=\{m\}$ contiene un único bien con peso $w(m)=1$.
+        \item Mercancías: $M=\lbrace m\rbrace$ contiene un único bien con peso $w(m)=1$.
         \item Precios y stock: Para cada puerto $v_i \neq v_0$:
             $$
             c^+(v_i,m) = 1, \quad
@@ -299,18 +299,19 @@ Se demuestra a continuación la equivalencia entre ambas instancias, para demost
         $$
     un ciclo Hamiltoniano de costo total $\leq D$.
     Definimos la solución del Comerciante Holandés:
-    
-    * Ruta: $R = C$.
-    * Transacciones:
-      $$
-      q^+_j(m) = 1 \quad q^-_j(m) = 0 \quad \text{en cada } v_{i_j}
-      $$
-      $$
-      q^+_j(m) = 0 \quad q^-_{r+1}(m) = n-1 \quad \text{en } v_0
-      $$
+    \begin{itemize}
+        \item Ruta: $R = C$.
+        \item Transacciones:
+          $$
+          q^+_j(m) = 1 \quad q^-_j(m) = 0 \quad \text{en cada } v_{i_j}
+          $$
+          $$
+          q^+_j(m) = 0 \quad q^-_{r+1}(m) = n-1 \quad \text{en } v_0
+          $$
+    \end{itemize}
     Notemos que el inventario se incrementa en una unidad por puerto visitado y nunca es negativo. En el puerto $v_0$, el inventario acumulado es exactamente $n-1$, por lo que la restricción $0 \leq q^-_{r+1}(m) \leq I_{r+1}(m)$ se satisface. Cada puerto $v_i \neq v_0$ permite a lo sumo una compra, por lo que se satisfacen las restricciones de stock. La restricción de capacidad se cumple trivialmente pues $B=+\infty$. Además se cumple la restricción de capital pues $f_{r+1} = (n-1) \cdot 1 = n-1 = K$. Por último, el tiempo coincide con el costo del ciclo TSP y es $\le D = T$.
     
-    Luego, la solución es factible y satisface $f_{r+1} \ge K$.
+    En consecuencia, la solución es factible y satisface $f_{r+1} \ge K$.
     
     \item Desde CH a TSP: Supóngase que existe una solución factible $(R,Q)$ de CH-DEC en $\mathcal{I}'$ tal que $f_{r+1} \ge K = n-1$ Nótese que:
     \begin{itemize}
@@ -319,14 +320,14 @@ Se demuestra a continuación la equivalencia entre ambas instancias, para demost
         \item Cada puerto $v_i \neq v_0$ puede aportar a lo sumo una unidad.
         \item El puerto $v_0$ no aporta mercancía.
     \end{itemize}
-    Luego, para alcanzar $f_{r+1} \ge n-1$, es necesario recolectar exactamente una unidad en cada puerto $v_i \neq v_0$. Esto implica que todos los puertos $v_i \neq v_0$ son visitados una vez, por tanto se tiene tiene la forma $R = (v_0, v_{i_1}, \dots, v_{i_{n-1}}, v_0)$ y como:
+    Por tanto, para alcanzar $f_{r+1} \ge n-1$, es necesario recolectar exactamente una unidad en cada puerto $v_i \neq v_0$. Esto implica que todos los puertos $v_i \neq v_0$ son visitados una vez, por tanto se tiene la forma $R = (v_0, v_{i_1}, \dots, v_{i_{n-1}}, v_0)$ y como:
 $$
 \sum_{j=0}^{n-1} t(v_{i_j}, v_{i_{j+1}})
  \le T = D,
 $$
 la ruta corresponde a un ciclo Hamiltoniano de costo a lo sumo $D$.
 \end{itemize}
-La reducción se realiza en tiempo polinomial y establece una correspondencia exacta entre todas las soluciones de TSP y soluciones de CH-DEC. Por lo tanto, CH-DEC es NP-duro, y el problema de optimización CH es NP-duro. Esta conclusión justifica la necesidad de algoritmos aproximados o heurísticos para instancias de tamaño realista.
+La reducción se realiza en tiempo polinomial y establece una correspondencia exacta entre todas las soluciones de TSP y soluciones de CH-DEC. Por lo tanto, CH-DEC es NP-duro y el problema de optimización CH es NP-duro. Esta conclusión justifica la necesidad de algoritmos aproximados o heurísticos para instancias de tamaño realista.
 \end{proof}
 
 \section{Asunciones generales}
@@ -344,11 +345,11 @@ Además de las restricciones explícitas incluidas en la definición formal del 
         $$
     En consecuencia, minimizar el costo de transporte y minimizar el tiempo de viaje son objetivos compatibles. Esta asunción evita la existencia de trayectos arbitrariamente largos pero baratos (o cortos y prohibitivamente caros) y refleja un único medio de transporte con comportamiento homogéneo. El factor $\alpha$ es constante en todo el grafo y no depende del puerto, del tramo ni del momento del viaje.
     \item Las operaciones comerciales (compra y venta) y los desplazamientos se realizan sin demoras adicionales. No se modelan tiempos de espera, congestión portuaria ni conflictos operativos. El tiempo total del recorrido fluye exclusivamente como consecuencia de los viajes entre puertos. Asimismo, se asume que precios, tiempos de viaje y costos permanecen constantes durante todo el horizonte de planificación. El modelo es, por tanto, estático y no contempla dinámicas temporales.
-    \item El modelo excluye cualquier fuente de aleatoriedad: no se consideran accidentes, retrasos, pérdidas de mercancía, fluctuaciones de precios ni fallas logísticas. Si bien estas extensiones no están prohibidas conceptualmente, se omiten deliberadamente para mantener el problema dentro de un marco puramente determinista y combinatorio.
+    \item El modelo no contempla fuentes de aleatoriedad: no se consideran accidentes, retrasos, pérdidas de mercancía, fluctuaciones de precios ni fallas logísticas. Si bien estas extensiones no están prohibidas conceptualmente, se omiten deliberadamente para mantener el problema dentro de un marco puramente determinista y combinatorio.
 \end{itemize}
 
 \section{Metodología general de resolución}
-El problema CH combina dos fuentes principales de complejidad: la selección de una ruta factible en el grafo de puertos, y la planificación óptima de transacciones comerciales a lo largo de dicha ruta.
+El problema CH combina dos fuentes principales de complejidad: la selección de una ruta factible en el grafo de puertos y la planificación óptima de transacciones comerciales a lo largo de dicha ruta.
 
 Desde un punto de vista algorítmico, resulta natural desacoplar ambas dimensiones y abordar el problema como la composición de dos subproblemas claramente diferenciados:
 
@@ -371,10 +372,10 @@ que satisfacen la restricción de tiempo. Para cada ruta candidata $R$, se defin
 
 En consecuencia, el problema original puede expresarse conceptualmente como:
 $$
-\max_{R \in \mathcal{R}} ; \text{valor}(R),
+\max_{R \in \mathcal{R}} \text{valor}(R),
 $$
 
-donde $\mathcal{R}$ es el conjunto de rutas factibles y $\text{valor}(R)$ denota el capital máximo alcanzable, respetando las restricciones, al recorrer $R$.
+donde $\mathcal{R}$ es el conjunto de rutas factibles y  $\text{valor}(R) = \max_Q f_{r+1}(R,Q)$ denota el capital máximo alcanzable, respetando las restricciones, al recorrer $R$.
 
 \section{Enfoque de fuerza bruta}
 Una estrategia directa consiste en explorar exhaustivamente ambas dimensiones:
@@ -395,7 +396,7 @@ Para abordar la complejidad combinatoria de la selección de rutas en instancias
 La arquitectura del agente se compone de dos módulos principales diseñados para procesar la información de la instancia y tomar decisiones secuenciales:
 
 \begin{itemize}
-    \item {Codificador de Instancia (Context Encoder):} Este componente recibe como entrada los parámetros estáticos del problema, incluyendo la matriz de tiempos de viaje, los pesos de las mercancías, los precios y stocks en cada puerto, y las capacidades del barco. Mediante una serie de capas densas con activaciones ReLU, la red proyecta estas características en un espacio latente de alta dimensión ($d=256$), generando un vector de contexto que resume la configuración global del mercado y la geografía del problema.
+    \item {Codificador de Instancia (Context Encoder):} Este componente recibe como entrada los parámetros estáticos del problema, incluyendo la matriz de tiempos de viaje, los pesos de las mercancías, los precios y stocks en cada puerto y las capacidades del barco. Mediante una serie de capas densas con activaciones ReLU, la red proyecta estas características en un espacio latente de alta dimensión ($d=256$), generando un vector de contexto que resume la configuración global del mercado y la geografía del problema.
     \item {Red de Decodificación y Política (Policy Network):} Este componente actúa como el decodificador del sistema, integrando la representación latente de la instancia con el puerto actual (procesado mediante una capa de \textit{embedding}). A través de una serie de capas totalmente conectadas, la red proyecta esta información unificada en un vector de \textit{logits} de dimensión $|V|$. De esta forma, el agente genera una distribución de probabilidad que pondera el atractivo de cada puerto potencial, optimizando la selección de destinos que maximicen la ganancia esperada a largo plazo.
 \end{itemize}
 
@@ -410,11 +411,11 @@ El estado del agente en cada paso de tiempo se define por el puerto actual y el 
 
 \subsection{Proceso de Entrenamiento}
 
-A diferencia de los enfoques de aprendizaje supervisado, el agente se entrena mediante una estrategia de optimización al vuelo (on-the-fly) para cada instancia específica. Durante el entrenamiento, se generan múltiples episodios (rutas) utilizando una política estocástica con temperatura ajustable. La temperatura $\tau$ comienza en un valor alto para fomentar la exploración de diversas trayectorias y decae linealmente hacia un valor bajo, permitiendo que el agente converja hacia decisiones más deterministas y lucrativas. Las recompensas se calculan evaluando el capital final obtenido en cada ruta mediante los evaluadores de transacciones, y los pesos de la red se actualizan para maximizar la esperanza del retorno.
+A diferencia de los enfoques de aprendizaje supervisado, el agente se entrena mediante una estrategia de optimización al vuelo (on-the-fly) para cada instancia específica. Durante el entrenamiento, se generan múltiples episodios (rutas) utilizando una política estocástica con temperatura ajustable. La temperatura $\tau$ comienza en un valor alto para fomentar la exploración de diversas trayectorias y decae linealmente hacia un valor bajo, permitiendo que el agente converja hacia decisiones más deterministas y lucrativas. Las recompensas se calculan evaluando el capital final obtenido en cada ruta mediante los evaluadores de transacciones y los pesos de la red se actualizan para maximizar la esperanza del retorno.
 
 \section{Evaluadores}
 
-Dada una ruta fija, el problema de determinar las transacciones óptimas se denomina evaluación de ruta. En esta sección se describen las metodologías propuestas para resolver este subproblema.
+Dada una ruta fija, el problema de determinar las transacciones óptimas se denomina evaluación de ruta. Dada la secuencia de puertos de la ruta $R$, denotamos el índice del paso en la ruta como $j \in \lbrace 0, \dots, r\rbrace$, donde el puerto visitado en el paso $j$ es $u_j = v_{i_j}$. En esta sección se describen las metodologías propuestas para resolver este subproblema.
 
 \subsection{Evaluación mediante Relajación Lineal}
 
@@ -422,71 +423,75 @@ Para garantizar una resolución eficiente, se aplica una relajación de la restr
 
 Se asume asimismo que la ruta $R$ proporcionada como entrada ya satisface las restricciones temporales del problema original.
 
-\subsubsection{Formulación del Modelo LP}
+\begin{theorem}[Formulación del Modelo LP]
+\label{thm:lp-model}
+El problema de evaluación de caminos donde los bienes son infinitamente divisibles se puede formular como un problema de Programación Lineal
+\end{theorem}
 
-Dada la secuencia de puertos de la ruta $R$, denotamos el índice del paso en la ruta como $j \in \{0, \dots, r\}$, donde el puerto visitado en el paso $j$ es $u_j = v_{i_j}$.
+\begin{proof}
+    Se construye el siguiente modelo de LP para el problema de evaluación de ruta:
+    \paragraph*{Variables de decisión}
+    Para cada paso $j$ y mercancía $m \in M$:
+    \begin{itemize}
+        \item $q_{j,m}^+ \in \mathbb{R}_{\ge 0}$: Cantidad comprada de la mercancía $m$ en el paso $j$.
+        \item $q_{j,m}^- \in \mathbb{R}_{\ge 0}$: Cantidad vendida de la mercancía $m$ en el paso $j$.
+    \end{itemize}
+    
+    \paragraph*{Variables de estado}
+    \begin{itemize}
+        \item $I_{j,m} \in \mathbb{R}_{\ge 0}$: Inventario de la mercancía $m$ al salir del puerto en el paso $j$.
+        \item $f_j \in \mathbb{R}_{\ge 0}$: Capital disponible después de las transacciones y gastos en el paso $j$.
+    \end{itemize}
+    
+    \paragraph*{Función Objetivo}
+    Maximizar el capital acumulado al finalizar la ruta:
+    $$
+    \text{Maximizar } \quad f_{r+1}
+    $$
+    
+    \paragraph*{Restricciones}
+    El modelo está sujeto a las siguientes restricciones para todo $j \in \lbrace 1, \dots, r\rbrace $ y $m \in M$:
 
-\paragraph*{Variables de decisión}
-Para cada paso $j$ y mercancía $m \in M$:
-\begin{itemize}
-    \item $q_{j,m}^+ \in \mathbb{R}_{\ge 0}$: Cantidad comprada de la mercancía $m$ en el paso $j$.
-    \item $q_{j,m}^- \in \mathbb{R}_{\ge 0}$: Cantidad vendida de la mercancía $m$ en el paso $j$.
-\end{itemize}
-
-\paragraph*{Variables de estado}
-\begin{itemize}
-    \item $I_{j,m} \in \mathbb{R}_{\ge 0}$: Inventario de la mercancía $m$ al salir del puerto en el paso $j$.
-    \item $f_j \in \mathbb{R}_{\ge 0}$: Capital disponible después de las transacciones y gastos en el paso $j$.
-\end{itemize}
-
-\paragraph*{Función Objetivo}
-Maximizar el capital acumulado al finalizar la ruta:
-$$
-\text{Maximizar } \quad f_{r}
-$$
-
-\paragraph*{Restricciones}
-El modelo está sujeto a las siguientes restricciones para todo $j \in \{1, \dots, r\}$ y $m \in M$:
-
-1) \textit{Balance de inventario:} El inventario actual es el anterior más las compras menos las ventas.
-\begin{equation}
-    I_{j,m} = I_{j-1,m} + q_{j,m}^+ - q_{j,m}^-
-\end{equation}
-
-2) \textit{Capacidad del barco:} El peso total del inventario no puede exceder la capacidad $B$.
-\begin{equation}
-    \sum_{m \in M} I_{j,m} \cdot w(m) \le B
-\end{equation}
-
-3) \textit{Balance de capital:} El capital se actualiza restando costos de viaje, tasas portuarias y compras, y sumando ventas. Se debe garantizar solvencia en todo momento ($f_j \ge 0$).
-\begin{equation}
-\begin{split}
-    f_j = f_{j-1} & - \kappa(u_{j-1}, u_j) - S(u_j) \\
-                  & + \sum_{m \in M} \left( p^-(u_j, m) q_{j,m}^- - p^+(u_j, m) q_{j,m}^+ \right) \ge 0
-\end{split}
-\end{equation}
-
-4) \textit{Límites de mercado:} Las transacciones no pueden exceder la oferta y demanda local del puerto actual.
-\begin{equation}
-    0 \le q_{j,m}^+ \le c^+(u_j, m)
-\end{equation}
-\begin{equation}
-    0 \le q_{j,m}^- \le c^-(u_j, m)
-\end{equation}
-
-5) \textit{Consistencia de venta:} No se puede vender más mercancía de la que se transportaba al llegar al puerto.
-\begin{equation}
-    q_{j,m}^- \le I_{j-1,m}
-\end{equation}
+    1) \textit{Balance de inventario:} El inventario actual es el anterior más las compras menos las ventas.
+    \begin{equation*}
+        I_{j,m} = I_{j-1,m} + q_{j,m}^+ - q_{j,m}^-
+    \end{equation*}
+    
+    2) \textit{Capacidad del barco:} El peso total del inventario no puede exceder la capacidad $B$.
+    \begin{equation*}
+        \sum_{m \in M} I_{j,m} \cdot w(m) \le B
+    \end{equation*}
+    
+    3) \textit{Balance de capital:} El capital se actualiza restando costos de viaje, tasas portuarias y compras y sumando ventas. Se debe garantizar solvencia en todo momento ($f_j \ge 0$).
+    \begin{equation*}
+    \begin{split}
+        f_j = f_{j-1} & - \kappa(u_{j-1}, u_j) - S(u_j) \\
+                      & + \sum_{m \in M} \left( p^-(u_j, m) q_{j,m}^- - p^+(u_j, m) q_{j,m}^+ \right) \ge 0
+    \end{split}
+    \end{equation*}
+    
+    4) \textit{Límites de mercado:} Las transacciones no pueden exceder la oferta y demanda local del puerto actual.
+    \begin{equation*}
+        0 \le q_{j,m}^+ \le c^+(u_j, m)
+    \end{equation*}
+    \begin{equation*}
+        0 \le q_{j,m}^- \le c^-(u_j, m)
+    \end{equation*}
+    
+    5) \textit{Consistencia de venta:} No se puede vender más mercancía de la que se transportaba al llegar al puerto.
+    \begin{equation*}
+        q_{j,m}^- \le I_{j-1,m}
+    \end{equation*}
+\end{proof}
 
 Con condiciones iniciales $f_0$ dado por la instancia e $I_{0,m} = 0$. Este modelo lineal permite evaluar rápidamente la rentabilidad potencial de una ruta candidata generada por los algoritmos de búsqueda.
 
 
 \subsection{Evaluador con Capital Infinito y sin límites de Compra o Venta}
 
-Se puede asumir que el Comerciante dispone de capital infinito (i.e. puede entrar en deudas) y no tiene límites en la cantidad de productos que puede comprar o vender en cada puerto. Dado esto, es necesario limitar la cantidad de transacciones que puede efectuar en un mismo puerto, pues si no, en un puerto donde exista un precio de venta mayor que el de compra, el Comerciante podría comprar y vender infinitamente dicho producto para obtener ganancias infinitas. Como compromiso, se asume que el Comerciante puede vender lo que ya tiene en el cargamento en un puerto, y comprar productos potencialmente iguales en este, pero no viceversa.
+Se puede asumir que el Comerciante dispone de capital infinito (i.e. puede entrar en deudas) y no tiene límites en la cantidad de productos que puede comprar o vender en cada puerto. Dado esto, es necesario limitar la cantidad de transacciones que puede efectuar en un mismo puerto, pues si no, en un puerto donde exista un precio de venta mayor que el de compra, el Comerciante podría comprar y vender infinitamente dicho producto para obtener ganancias infinitas. Como compromiso, se asume que el Comerciante puede vender lo que ya tiene en el cargamento en un puerto y comprar productos potencialmente iguales en este, pero no viceversa.
 
-Como idea de alto nivel para la demostración de la correctitud del algoritmo de este evaluador, se dividirá el espacio de carga en ``unidades de carga'' indivisibles e independientes, esto es, una unidad de carga puede en cada momento contener una cantidad de peso igual de un único producto (i.e. estar completamente llena), o estar completamente vacía. Demostraremos que se puede descomponer de esa forma cualquier solución, y, basados en esto, y usando el hecho de que para una unidad de carga existe una solución óptima, igualar cualquier solución óptima a una en la que el espacio de carga completo se comporta como una unidad de carga.
+Como idea de alto nivel para la demostración de la correctitud del algoritmo de este evaluador, se dividirá el espacio de carga en ``unidades de carga'' indivisibles e independientes, esto es, una unidad de carga puede en cada momento contener una cantidad de peso igual de un único producto (i.e. estar completamente llena), o estar completamente vacía. Se demostrará que se puede descomponer de esa forma cualquier solución y usando el hecho de que para una unidad de carga existe una solución óptima, igualar cualquier solución óptima a una en la que el espacio de carga completo se comporta como una unidad de carga.
 
 \begin{theorem}
     Bajo estas restricciones, existe una solución óptima donde la bodega de carga siempre está completamente llena de un único producto, o completamente vacía.
@@ -495,7 +500,7 @@ Como idea de alto nivel para la demostración de la correctitud del algoritmo de
 \begin{proof} 
     Primeramente, tómese una instancia del problema, con la restricción de que el cargamento solo puede estar completamente lleno de un mismo producto, o completamente vacío, existe una serie de decisiones que se pueden tomar $S$, que maximizan la ganancia dado un camino, con las restricciones restantes del problema.
 
-    Ahora, tómese una solución óptima del problema sin esta restricción. En una solución óptima, se puede interpretar la bodega de carga como un segmento inicialmente sin color $H$. Cuando se compra un peso $L$ del producto $m_i$, un conjunto de secciones (subsegmentos) sin color de $H$, cuya suma de longitudes es $L$, se colorea con el color $c_i$; y cuando se vende un peso $L$ de un producto $m_i$, tómese de $H$ un conjunto de subsegmentos coloreados con $c_i$, tal que la suma de sus longitudes es $L$ (lo cual obviamente debe existir), y se les quita el color. Ahora, se divide $H$ en segmentos que en cada momento fueron o bien completamente de algún color $c_i$ o bien sin color. Dado que la cantidad que se puede comprar o vender en un puerto es infinita, estos segmentos son independientes, esto es, la decisión de llenar o vaciar uno en un puerto dado no afecta la factibilidad de tomar decisiones sobre otros, y ninguno de ellos podría haberse utilizado para obtener una ganancia mayor que $S$ por unidad de peso en la bodega, porque entonces $S$ no sería óptima. Por lo tanto, es posible simplemente sustituir las decisiones tomadas sobre cada uno de estos segmentos de carga por las tomadas para toda la bodega en $S$.
+    Ahora, tómese una solución óptima del problema sin esta restricción. En una solución óptima, se puede interpretar la bodega de carga como un segmento inicialmente sin color $H$. Cuando se compra un peso $L$ del producto $m_i$, un conjunto de secciones (subsegmentos) sin color de $H$, cuya suma de longitudes es $L$, se colorea con el color $c_i$; y cuando se vende un peso $L$ de un producto $m_i$, tómese de $H$ un conjunto de subsegmentos coloreados con $c_i$, tal que la suma de sus longitudes es $L$ (lo cual debe existir) y se les quita el color. Ahora, se divide $H$ en segmentos que en cada momento fueron o bien completamente de algún color $c_i$ o bien sin color. Dado que la cantidad que se puede comprar o vender en un puerto es infinita, estos segmentos son independientes, esto es, la decisión de llenar o vaciar uno en un puerto dado no afecta la factibilidad de tomar decisiones sobre otros y ninguno de ellos podría haberse utilizado para obtener una ganancia mayor que $S$ por unidad de peso en la bodega, porque entonces $S$ no sería óptima. Por lo tanto, es posible simplemente sustituir las decisiones tomadas sobre cada uno de estos segmentos de carga por las tomadas para toda la bodega en $S$.
     
     Por lo tanto, existe una solución óptima tal que la bodega siempre está llena con un único producto, o completamente vacía.
 \end{proof}
@@ -505,14 +510,14 @@ Como idea de alto nivel para la demostración de la correctitud del algoritmo de
 \end{theorem}
 
 \begin{proof}
-    El problema se reduce a lo siguiente: dados pares de precios de compra y venta $b_{im}$, $s_{jm}$ para ciudades $i, j$ y productos $m$, tales que $i < j$, obtener el conjunto de intervalos no superpuestos $[i, j]$, cada uno con valor $v = s_{jm} - b_{im}$, tal que la suma de sus valores sea máxima, esto es equivalente a buscar decisiones de compras que llenen la bodega o vacíen la bodega, tal que no tengan conflictos, y maximicen la ganancia. Este es un problema de planificación de intervalos ponderados (weighted interval scheduling). 
+    El problema se reduce a lo siguiente: dados pares de precios de compra y venta $b_{im}$, $s_{jm}$ para ciudades $u_i, u_j$ y productos $m$, tales que $i < j$, obtener el conjunto de intervalos no superpuestos $[i, j]$, cada uno con valor $v = s_{jm} - b_{im}$, tal que la suma de sus valores sea máxima, esto es equivalente a buscar decisiones de compras que llenen la bodega o vacíen la bodega, tal que no tengan conflictos y maximicen la ganancia. Este es un problema de planificación de intervalos ponderados (weighted interval scheduling). 
 \end{proof}
 
-Podemos encontrar los intervalos recorriendo cada par de ciudades diferentes en el trayecto y creando intervalos para cada producto, tomando el precio de compra de la primera ciudad y el precio de venta de la segunda. Podemos omitir los intervalos en los que el precio de venta sea menor que el precio de compra. En cualquier caso, la cantidad de intervalos será $O(n^2 m)$, donde $n$ es la cantidad de ciudades y $m$ la cantidad de productos.
+Se pueden encontrar los intervalos recorriendo cada par de ciudades diferentes en el trayecto y creando intervalos para cada producto, tomando el precio de compra de la primera ciudad y el precio de venta de la segunda. Es posible omitir los intervalos en los que el precio de venta sea menor que el precio de compra. En cualquier caso, la cantidad de intervalos será $O(n^2 m)$, donde $n$ es la cantidad de ciudades y $m$ la cantidad de productos.
 
-Ahora, para cada intervalo, tenemos dos opciones: tomarlo o no. Tomarlo elimina la posibilidad de tomar intervalos que se solapen con él. Resolveremos este problema utilizando programación dinámica. Agrupemos los intervalos por tiempo de finalización, si almacenamos el peso máximo que podemos obtener en el subconjunto de todos los intervalos que terminan en o antes de $i$, para cada $i$, la mejor solución para un tiempo de finalización $t = i + 1$ es o bien tomar uno de los intervalos que terminan en $i + 1$ y la mejor solución para el conjunto de intervalos que terminan en o antes del momento en que dicho intervalo comienza, o bien no tomarlo y simplemente reutilizar $S[i]$.
+Ahora, para cada intervalo, se tienen dos opciones: tomarlo o no. Tomarlo elimina la posibilidad de tomar intervalos que se solapen con él. Resolveremos este problema utilizando programación dinámica. Sean agrupados los intervalos por tiempo de finalización, si se almacena el peso máximo que podemos obtener en el subconjunto de todos los intervalos que terminan en o antes de $i$, para cada $i$, la mejor solución para un tiempo de finalización $t = i + 1$ es o bien tomar uno de los intervalos que terminan en $i + 1$ y la mejor solución para el conjunto de intervalos que terminan en o antes del momento en que dicho intervalo comienza, o bien no tomarlo y simplemente reutilizar $S[i]$.
 
-Sea $S[i]$ el peso máximo que podemos alcanzar con todos los intervalos cuyo tiempo de finalización es menor o igual que $i$, entonces
+Sea $S[i]$ el peso máximo que es posible alcanzar con todos los intervalos cuyo tiempo de finalización es menor o igual que $i$, entonces
 $$
 S[i] = \max(\max_c\lbrace w_{ic} + S[h(c)] \rbrace, S[i - 1]),
 $$
@@ -521,7 +526,7 @@ donde $w_{ic}$ es el peso del $c$-ésimo intervalo con tiempo de finalización $
 \begin{figure}[!t]
 \centering
 \begin{algorithmic}[1]
-\STATE \textbf{Entrada} Conjunto de intervalos $I = \{(i,j,w)\}$
+\STATE \textbf{Entrada} Conjunto de intervalos $I = \lbrace (i,j,w)\rbrace$
 \STATE \textbf{Salida} Peso máximo alcanzable
 
 \STATE Construir un diccionario $D$ que asocia cada tiempo de finalización $j$
@@ -533,7 +538,7 @@ con la lista de pares $(i,w)$ de intervalos que terminan en $j$
     \IF{$j \notin D$}
         \STATE $D[j] \leftarrow \emptyset$
     \ENDIF
-    \STATE $D[j] \leftarrow D[j] \cup \{(i,w)\}$
+    \STATE $D[j] \leftarrow D[j] \cup \lbrace(i,w)\rbrace$
 \ENDFOR
 
 \STATE Definir la función $S(x)$:
@@ -541,7 +546,7 @@ con la lista de pares $(i,w)$ de intervalos que terminan en $j$
     \STATE \RETURN $0$
 \ENDIF
 
-\STATE $take \leftarrow \max \{\, w + S(i) \mid (i,w) \in D[x] \,\}$
+\STATE $take \leftarrow \max \lbrace \, w + S(i) \mid (i,w) \in D[x] \,\rbrace$
 \STATE \RETURN $\max(take,\; S(x-1))$
 
 \STATE \textbf{Resultado final:} $S(|I|-1)$
@@ -551,37 +556,37 @@ con la lista de pares $(i,w)$ de intervalos que terminan en $j$
 \end{figure}
 
 \begin{theorem}
-    La complejidad temporal del algoritmo es $O(n^2 m (\log(n) + \log(m)))$, donde $n$ es la cantidad de puertos, y $m$ la cantidad de productos.
+    La complejidad temporal del algoritmo es $O(n^2 m (\log n + \log m))$, donde $n$ es la cantidad de puertos y $m$ la cantidad de productos.
 \end{theorem}
 
 \begin{proof}
-    Para el algoritmo de \textbf{weighted interval scheduling}, la configuración inicial de agrupar los intervalos por tiempo de finalización es $O(n \cdot \log(n))$, mientras que, como se muestra en la Fig.~\ref{alg:weighted-interval-dp}, el cálculo de \texttt{take} en la función $S$ recorre cada intervalo exactamente una vez; la otra llamada a \texttt{max} corresponde a una llamada recursiva dentro de la programación dinámica. Por lo tanto, la complejidad es $O(n \cdot \log(n))$.
+    Para el algoritmo de weighted interval scheduling, la configuración inicial de agrupar los intervalos por tiempo de finalización es $O(n\log n)$, mientras que, como se muestra en la Fig.~\ref{alg:weighted-interval-dp}, el cálculo de \texttt{take} en la función $S$ recorre cada intervalo exactamente una vez; la otra llamada a \texttt{max} corresponde a una llamada recursiva dentro de la programación dinámica. Por lo tanto, la complejidad es $O(n \log n)$.
 
-    Aunque el problema de \textbf{weighted interval scheduling} puede resolverse en $O(N \cdot \log(N))$, aquí $N$ es en realidad $O(n^2 m)$, donde $n$ es la cantidad de puertos y $m$ la cantidad de tipos de productos, esto es, como máximo existen $m$ intervalos por cada par de puertos. Por lo tanto, la complejidad total es $O(n^2 m (\log(n) + \log(m)))$.
+    Aunque el problema de weighted interval scheduling puede resolverse en $O(N \cdot \log(N))$, aquí $N$ es en realidad $O(n^2 m)$, donde $n$ es la cantidad de puertos y $m$ la cantidad de tipos de productos, esto es, como máximo existen $m$ intervalos por cada par de puertos. Por lo tanto, la complejidad total es $O(n^2 m (\log(n) + \log(m)))$.
 \end{proof}
 
 Para obtener no solo el peso máximo sino también la solución, siguiendo el
 esquema del algoritmo presentado en la Fig.~\ref{alg:weighted-interval-dp},
-almacenamos la mejor solución junto con el peso máximo, y componemos las
+almacenamos la mejor solución junto con el peso máximo y componemos las
 soluciones tomando o no tomando el intervalo correspondiente en cada tiempo de
 finalización.
 
 \subsection{Evaluación greedy asumiendo deudas y capacidad infinita}
-Otra forma eficiente de evaluar una ruta $R$ dada y obtener una cota superior, surge al asumir que el barco puede tener inventario infinito o suficientemente grande, y que la tripulación puede asumir deudas. Esto es asumir que $B=+\infty$ y eliminar la restricción $f_j \geq 0$, teniéndose que $f\in \mathbb{R}$.
+Otra forma eficiente de evaluar una ruta $R$ dada y obtener una cota superior, surge al asumir que el barco puede tener inventario infinito o suficientemente grande y que la tripulación puede asumir deudas. Esto es asumir que $B=+\infty$ y eliminar la restricción $f_j \geq 0$, teniéndose que $f\in \mathbb{R}$.
 
 Luego, las únicas restricciones relevantes que permanecen son, la no negatividad del inventario y los límites de stock por puerto.
 
-Dado que nuestra función a optimizar puede ser rescrita como:
+Dado que nuestra función a optimizar puede ser reescrita como:
 
 $$
-f_{r+1} = f_0 + \sum_{m\in M}\sum_{j=1}^r \lbrack p^-(v_j,m) q_j^-(m) - p^+(v_j,m) q_j^+(m)  \rbrack
+f_{r+1} = f_0 + \sum_{m\in M}\sum_{j=1}^r \lbrack p^-(u_j,m) q_j^-(m) - p^+(u_j,m) q_j^+(m)  \rbrack
 $$
 
 El modelo bajo las asunciones tomadas posee tres propiedades fundamentales:
 \begin{itemize}
     \item La función objetivo es aditiva y no existen restricciones cruzadas entre mercancías distintas. Por lo tanto, la ganancia total se obtiene sumando las ganancias óptimas de cada mercancía tratada de manera independiente.
     \item La ruta impone un orden total sobre los puertos. Las compras solo pueden emparejarse con ventas posteriores en la ruta, lo que introduce una dirección temporal estricta.
-    \item Para una mercancía fija, cada unidad comprada en un puerto puede verse como un “recurso” que debe emparejarse con una venta posterior. El beneficio de un emparejamiento $(i,j)$, con $i<j$, es $p^-(v_j,m) - p^+(v_i,m)$.
+    \item Para una mercancía fija, cada unidad comprada en un puerto puede verse como un “recurso” que debe emparejarse con una venta posterior. El beneficio de un emparejamiento $(i,j)$, con $i<j$, es $p^-(u_j,m) - p^+(u_i,m)$.
 \end{itemize}
 
 Así, el subproblema para una mercancía se reduce a seleccionar emparejamientos rentables entre compras y ventas, respetando las capacidades máximas.
@@ -602,19 +607,19 @@ Para una mercancía fija, el procedimiento conceptual es el siguiente:
 \STATE \textbf{Entrada} Instancia $\mathcal{I}$, ruta $\mathcal{R}$
 \STATE \textbf{Salida} valor óptimo $f$, decisiones $q^+, q^-$
 \STATE $f \leftarrow \mathcal{I}.f_0$
-\STATE $A \leftarrow \{\, v_j \mid c_j^- > 0 \,\}$ \COMMENT{Puertos donde es posible vender}
+\STATE $A \leftarrow \lbrace \, u_k \mid c_k^- > 0 \,\rbrace$ \COMMENT{Puertos donde es posible vender}
 
 \WHILE{$A \neq \emptyset$}
-    \STATE $v_j \leftarrow \arg\max \{\, p_k^- \mid v_k \in A \,\}$
+    \STATE $u_j \leftarrow \arg\max \lbrace\, p_k^- \mid v_k \in A \,\rbrace$
     
-    \STATE $B \leftarrow \{\, v_i \mid c_i^+ > 0,\; p_i^+ < p_j^-,\; i < j \,\}$
+    \STATE $B \leftarrow \lbrace \,u_i \mid c_i^+ > 0,\; p_i^+ < p_j^-,\; i < j \,\rbrace$
     \COMMENT{Puertos anteriores donde es posible comprar con ganancia}
     
     \IF{$B = \emptyset$}
-        \STATE $A \leftarrow A \setminus \{v_j\}$
-        \COMMENT{No es rentable vender en $v_j$}
+        \STATE $A \leftarrow A \setminus \lbrace u_j\rbrace$
+        \COMMENT{No es rentable vender en $u_j$}
     \ELSE
-        \STATE $v_i \leftarrow \arg\min \{\, p_k^+ \mid v_k \in B \,\}$
+        \STATE $u_i \leftarrow \arg\min \lbrace \, p_k^+ \mid u_k \in B \,\rbrace$
         
         \STATE $x \leftarrow \min(c_i^+, c_j^-)$
         
@@ -650,8 +655,8 @@ donde
 $$
 F_m = \sum_{j=1}^{r}
 \bigl(
-p^-(v_j,m)q^-_j(m) -
-p^+(v_j,m)q^+_j(m)
+p^-(u_j,m)q^-_j(m) -
+p^+(u_j,m)q^+_j(m)
 \bigr)
 $$
 \end{lemma}
@@ -662,18 +667,18 @@ Bajo las asunciones $B = +\infty$ y $f_j \in \mathbb{R}$, las restricciones de f
 Por lo tanto, maximizar la ganancia total es equivalente a maximizar, de manera independiente, la ganancia asociada a cada mercancía.
 \end{proof}
 
-Sea una mercancía $m$ fija. Para cada puerto $v_i$ de la ruta se definen:
+Sea una mercancía $m$ fija. Para cada puerto $u_i$ de la ruta se definen:
 
 \begin{itemize}
     \item $c^+_i \ge 0$: capacidad máxima de compra a precio $p^+_i$.
     \item $c^-_i \ge 0$: capacidad máxima de venta a precio $p^-_i$.
 \end{itemize}
 
-Al no poder comprarse mas unidades de las que se vende, ni ser óptimo comprar una unidad para no venderla, una solución factible queda completamente caracterizada por un conjunto de emparejamientos unitarios
+Al no poder comprarse más unidades de las que se vende, ni ser óptimo comprar una unidad para no venderla, una solución factible queda completamente caracterizada por un conjunto de emparejamientos unitarios
 $$
 (i,j), \quad i < j,
 $$
-donde cada emparejamiento representa una unidad comprada en $v_i$ y vendida en $v_j$, respetando las capacidades $c^+_i$ y $c^-_j$.
+donde cada emparejamiento representa una unidad comprada en $u_i$ y vendida en $u_j$, respetando las capacidades $c^+_i$ y $c^-_j$.
 
 La ganancia asociada a una pareja $(i,j)$ es $p^-_j - p^+_i$.
 
@@ -682,14 +687,14 @@ La ganancia asociada a una pareja $(i,j)$ es $p^-_j - p^+_i$.
 Sea $\mathcal{O}$ una solución óptima para una mercancía fija.
     \begin{itemize}
         \item No existen emparejamientos no rentables: Toda unidad emparejada $(i,j)$ en $\mathcal{O}$ satisface $p^-_j - p^+_i \ge 0.$
-        \item Saturación de emparejamientos rentables: Para todo puerto $v_j$, si en $\mathcal{O}$ se tiene $q^-_j < c^-_j$, entonces no existe ningún puerto $v_i$ con $i<j$ tal que $q^+_i < c^+_i$ y $p^-_j - p^+_i > 0$
+        \item Saturación de emparejamientos rentables: Para todo puerto $u_j$, si en $\mathcal{O}$ se tiene $q^-_j < c^-_j$, entonces no existe ningún puerto $u_i$ con $i<j$ tal que $q^+_i < c^+_i$ y $p^-_j - p^+_i > 0$
     \end{itemize}
 \end{lemma}
 
 \begin{proof} La demostración contempla las dos proposiciones:
     \begin{itemize}
         \item Supóngase que una unidad comprada en $v_i$ se vende en $v_j$ con $p^-_j - p^+_i < 0$. Eliminando dicho emparejamiento se obtiene una solución factible con ganancia estrictamente mayor, contradiciendo la optimalidad. El caso $p^-_j - p^+_i = 0$ puede eliminarse sin afectar la ganancia total.
-        \item Si existiera un puerto $v_i$ con $i<j$, capacidad disponible de compra, y $p^-_j - p^+_i > 0$, entonces agregar una unidad comprada en $v_i$ y vendida en $v_j$ incrementaría estrictamente la ganancia, contradiciendo nuevamente la optimalidad de $\mathcal{O}$.
+        \item Si existiera un puerto $u_i$ con $i<j$, capacidad disponible de compra y $p^-_j - p^+_i > 0$, entonces agregar una unidad comprada en $u_i$ y vendida en $u_j$ incrementaría estrictamente la ganancia, contradiciendo nuevamente la optimalidad de $\mathcal{O}$.
     \end{itemize}
 \end{proof}
 
@@ -714,13 +719,13 @@ El algoritmo greedy descrito produce una solución óptima para el Problema de e
 \end{theorem}
 
 \begin{proof}
-    Consideremos una mercancía fija. Demostraremos por inducción sobre el número de emparejamientos que el algoritmo greedy siempre esta por delante de cualquier solución óptima.
+    Consideremos una mercancía fija. Demostraremos por inducción sobre el número de emparejamientos que el algoritmo greedy siempre está por delante de cualquier solución óptima.
     
     En el primer emparejamiento, el algoritmo selecciona el mayor $p^-_j$ posible y el menor $p^+_i$ posible con $i<j$, maximizando la ganancia del primer emparejamiento. Ninguna solución óptima puede obtener una ganancia mayor en su primer emparejamiento.
     
     Supongamos que tras $k$ emparejamientos, la ganancia acumulada del algoritmo greedy es al menos la de cualquier solución óptima parcial con $k$ emparejamientos. En el paso $k+1$, el greedy selecciona el emparejamiento con mayor ganancia disponible restante. Luego, tras el emparejamiento $k+1$, el greedy continúa manteniéndose por delante.
 
-    Por el Lema~\ref{lem:greedy-max}, el greedy y realiza tantos emparejamientos como cualquier solución óptima. Por tanto, al finalizar, la ganancia total del greedy es al menos la de cualquier solución óptima.
+    Por el Lema~\ref{lem:greedy-max}, el greedy realiza tantos emparejamientos como cualquier solución óptima. Por tanto, al finalizar, la ganancia total del greedy es al menos la de cualquier solución óptima.
 \end{proof}
 
 \begin{corollary}
@@ -740,7 +745,7 @@ El algoritmo greedy descrito produce una solución óptima para el Problema de e
     Los puertos se ordenan una vez por precio de venta $p^-_j$(orden decreciente) y también se ordenan una vez por precio de compra $p^+_i$ (orden creciente).
     Esto puede realizarse en  $O(r \log r)$
     
-    Para cada puerto de venta $v_j$, el algoritmo recorre los puertos de compra anteriores $v_i$ con $i<j$, filtrando aquellos que tienen capacidad disponible y producen ganancia positiva $(p^-_j > p^+_i)$. Cada par $(i,j)$ se considera a lo sumo una vez. Por lo tanto, el número total de operaciones de emparejamiento está acotado por $O(r^2)$. No se itera unidad por unidad, sino que en cada paso se empareja la máxima cantidad posible. Ambas fases dan un costo total de $O(r \log r + r^2) = O(r^2)$
+    Para cada puerto de venta $u_j$, el algoritmo recorre los puertos de compra anteriores $u_i$ con $i<j$, filtrando aquellos que tienen capacidad disponible y producen ganancia positiva $(p^-_j > p^+_i)$. Cada par $(i,j)$ se considera a lo sumo una vez. Por lo tanto, el número total de operaciones de emparejamiento está acotado por $O(r^2)$. No se itera unidad por unidad, sino que en cada paso se empareja la máxima cantidad posible. Ambas fases dan un costo total de $O(r \log r + r^2) = O(r^2)$
 
     Aplicando el algoritmo greedy a cada mercancía, se obtiene una complejidad total de $O(|M|r^2)$
 \end{proof}
@@ -802,7 +807,10 @@ Para verificar si la diferencia de rendimiento entre los métodos es estadístic
 
 En todos los experimentos realizados (Tabla \ref{tab:inferencial}), el p-valor resultante fue consistentemente superior a $0.05$. Bajo este criterio estadístico, no se dispone de evidencia suficiente para rechazar la hipótesis nula. Este resultado es de gran relevancia práctica, ya que permite afirmar con rigor estadístico que la aproximación mediante Reinforcement Learning no presenta una degradación significativa de la calidad de la solución frente al óptimo global en las instancias evaluadas, ofreciendo además una escalabilidad superior para problemas de mayor dimensión.
 
+\section{Conclusiones}
+En este trabajo se presentó una formulación formal del problema El Comerciante Holandés, integrando decisiones de ruteo y transacciones comerciales en un único marco combinatorio. Se demostró que el problema es NP-duro mediante una reducción directa desde el Traveling Salesman Problem, lo que justifica la necesidad de enfoques aproximados o descomposiciones estructurales.
 
+Con este objetivo, se propuso una metodología basada en separar la búsqueda de rutas de su evaluación económica. Bajo esta perspectiva, se introdujeron distintos evaluadores de caminos que bajo asunciones relajadas, resuelven óptimamente el subproblema de maximización de ganancia para una ruta fija. Esta descomposición permite explorar el espacio de soluciones de manera eficiente y ofrece una base sólida para el diseño de heurísticas prácticas.
 
 \end{document}
 
