@@ -30,7 +30,7 @@ mod tests {
         };
         // Route: port 0 -> port 1 -> port 0
         let route: Vec<PortId> = vec![0, 1, 0];
-        let calculator = IntegerBruteForce;
+        let calculator = IntegerBruteForce::new();
         let (profit, _decisions) = calculator.calculate_best_profit(&instance, &route);
         // Buy 10 at port 0 for 2 each, sell 10 at port 1 for 5 each
         // Initial: 20, buy: -20, sell: +50, final: 50
@@ -93,7 +93,7 @@ mod tests {
 
         // Route: 0 -> 1 -> 2 -> 3
         let route: Vec<PortId> = vec![0, 1, 2, 3];
-        let evaluator = IntegerBruteForce;
+        let evaluator = IntegerBruteForce::new();
         let (profit, _) = evaluator.calculate_best_profit(&instance, &route);
 
         /* Step-by-Step Logic:

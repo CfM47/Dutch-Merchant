@@ -1,5 +1,5 @@
 use crate::{evaluator::path_evaluator::PathEvaluator, model::instance::PortId};
-use highs::{Col, RowProblem, Sense};
+use highs::{Col, HighsModelStatus, RowProblem, Sense};
 
 pub struct IntegerBruteForce;
 
@@ -42,7 +42,6 @@ impl PathEvaluator for IntegerBruteForce {
 
         for j in 0..r {
             let port = nodes[j];
-
             let mut q_buy_j = Vec::with_capacity(m);
             let mut q_sell_j = Vec::with_capacity(m);
             let mut inv_j = Vec::with_capacity(m);
@@ -58,7 +57,7 @@ impl PathEvaluator for IntegerBruteForce {
                 let qs = problem.add_integer_column(0.0, 0.0..sell_cap);
                 q_sell_j.push(qs);
 
-                // Inventory variable: 0 <= I[j][m] < +infinity
+                // Inventory variable: 0 <= I[j][m]
                 let inv = problem.add_integer_column(0.0, 0.0..);
                 inv_j.push(inv);
             }
@@ -166,6 +165,9 @@ impl PathEvaluator for IntegerBruteForce {
         // Solve the LP
         match problem.optimise(Sense::Maximise).try_solve() {
             Ok(solved_model) => {
+                if solved_model.status() != HighsModelStatus::Optimal {
+                    return (instance.initial_capital, decisions);
+                }
                 let mut profit = solved_model.objective_value();
 
                 // Calculate cumulative travel time
