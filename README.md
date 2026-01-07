@@ -4,6 +4,7 @@
 Bachelor in Computer Science (4th Year)
 
 ## Overview
+([view the full report](report/report.pdf) )
 
 This repository contains the final project for the course *Algorithms Analysis and Design*. The objective of the project is to apply theoretical and practical tools from algorithm design and computational complexity to a challenging real-world–inspired problem that is computationally intractable (NP-hard or NP-complete).
 
