@@ -12,7 +12,7 @@
   % will default to the driver specified in the system graphics.cfg if no
   % driver is specified.
   % \usepackage[dvips]{graphicx}
-  % declare the path(s) where your graphic files are
+  % declare the path(s) where your graphic files areb
   % \graphicspath{{../eps/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
@@ -64,7 +64,6 @@
 
 % Corolarios
 \newtheorem{corollary}{Corolario}
-
 
 \begin{document}
 %
@@ -133,7 +132,7 @@ Con base en la descripción informal previa, se presenta una formulación matem�
     
     donde:
     \begin{itemize}
-        \item $V$ es un conjunto de vértices de un grafo completo, que representan los puertos. 
+        \item $V$ es un conjunto de vértices de un grafo completo, que representan los puertos \cite{diestel2005}.
         \item $t : V \times V \to \mathbb{R}^+$ representa el tiempo de viaje entre pares de ciudades.
         \item $\kappa : V \times V \to \mathbb{R}^+$ representa el costo de viaje entre pares de ciudades.
         \item $S : V \to \mathbb{R}^+$ es el costo fijo de visitar cada puerto.
@@ -247,17 +246,16 @@ Para comprender la dificultad intrínseca de CH, se analiza su versión de decis
     Se denotará este problema como CH-DEC.
 \end{definition}
 
-Se toma como referencia el conocido \textit{Problema del Viajante} o \textit{Traveling Salesman Problem} (TSP) en su versión de decisión. 
-% aquí deberíamos poner una referencia si lo creemos necesario.
+Se toma como referencia el conocido \textit{Problema del Viajante} o \textit{Traveling Salesman Problem} (TSP) en su versión de decisión \cite{kleinberg2005}. 
 
 \begin{definition}[Problema del viajante (TSP)]
-    Dado un grafo completo $G=(V,E)$ con función de pesos $d:E\to \mathbb{R}^+$ y un umbral $D\in\mathbb{R}^+$, ¿existe un ciclo Hamiltoniano que visite todos los vértices exactamente una vez y cuyo costo total no exceda $D$?.
+    Dado un grafo completo $G=(V,E)$ con función de pesos $d:E\to \mathbb{R}^+$ y un umbral $D\in\mathbb{R}^+$, ¿existe un ciclo Hamiltoniano (que visite todos los vértices exactamente una vez) y cuyo costo total no exceda $D$? \cite{diestel2005}.
 \end{definition}
-El TSP de decisión es un problema conocido NP-completo y por tanto NP-duro.
+El TSP de decisión es un problema conocido NP-completo y por tanto NP-duro \cite{kleinberg2005}
 
-Nótese que el problema requiere visitar un conjunto de puertos sin repeticiones, decidir qué mercancías comprar y vender en cada puerto y planificar la ruta de modo que la secuencia de visitas respete un límite de tiempo total. La combinación de estos elementos sugiere que, para lograr la máxima ganancia, el capitán debe resolver un problema que, en esencia, contiene la dificultad de encontrar un ciclo Hamiltoniano de costo mínimo en un grafo completo ponderado, es decir, un problema equivalente al TSP. Esta analogía permite entender intuitivamente por qué CH es un problema NP-duro. 
+Nótese que el problema requiere visitar un conjunto de puertos sin repeticiones, decidir qué mercancías comprar y vender en cada puerto y planificar la ruta de modo que la secuencia de visitas respete un límite de tiempo total. La combinación de estos elementos sugiere que, para lograr la máxima ganancia, el capitán debe resolver un problema que, en esencia, contiene la dificultad de encontrar un ciclo Hamiltoniano de costo mínimo en un grafo completo ponderado \cite{diestel2005}, es decir, un problema equivalente al TSP. Esta analogía permite entender intuitivamente por qué CH es un problema NP-duro.  
 
-La idea general de la demostración que se presenta a continuación, consiste en forzar a que el comerciante tenga que todos los puertos para recoger todas las unidades de mercancía necesarias para alcanzar $K$. Para esto se crea un grafo donde cada puerto distinto del origen contiene una única unidad de mercancía, el único puerto vendedor es el origen y $K=|V|-1$. 
+La idea general de la demostración que se presenta a continuación, consiste en forzar a que el comerciante tenga que todos los puertos para recoger todas las unidades de mercancía necesarias para alcanzar $K$. Para esto se crea un grafo donde cada puerto distinto del origen contiene una única unidad de mercancía, el único puerto vendedor es el origen y $K=|V|-1$. Se sigue el esquema para encontrar problemas NP-duros de \cite{kleinberg2005}.
 
 \begin{theorem}
 CH es NP-duro.
@@ -328,7 +326,7 @@ $$
 $$
 la ruta corresponde a un ciclo Hamiltoniano de costo a lo sumo $D$.
 \end{itemize}
-La reducción se realiza en tiempo polinomial y establece una correspondencia exacta entre todas las soluciones de TSP y soluciones de CH-DEC. Por lo tanto, CH-DEC es NP-duro y el problema de optimización CH es NP-duro. Esta conclusión justifica la necesidad de algoritmos aproximados o heurísticos para instancias de tamaño realista.
+La reducción se realiza en tiempo polinomial y establece una correspondencia exacta entre todas las soluciones de TSP y soluciones de CH-DEC. Por lo tanto, CH-DEC es NP-duro y el problema de optimización CH es NP-duro. Esta conclusión justifica la necesidad de algoritmos aproximados o heurísticos para instancias de tamaño realista \cite{kleinberg2005}.
 \end{proof}
 
 \section{Asunciones generales}
@@ -381,7 +379,7 @@ donde $\mathcal{R}$ es el conjunto de rutas factibles y  $\text{valor}(R) = \max
 \section{Enfoque de fuerza bruta}
 Una estrategia directa consiste en explorar exhaustivamente ambas dimensiones:
 \begin{itemize} 
-    \item Enumeración de rutas: considerar todas las permutaciones posibles de subconjuntos de puertos, lo que induce un crecimiento exponencial del espacio de búsqueda.
+    \item Enumeración de rutas: considerar todas las permutaciones posibles de subconjuntos de puertos, lo que induce un crecimiento exponencial del espacio de búsqueda \cite{cormen2009, kleinberg2005}.
     \item Evaluación completa de transacciones: para cada ruta, considerar todas las combinaciones posibles de compras y ventas en cada puerto, respetando las restricciones del modelo.
 \end{itemize}
 
@@ -390,15 +388,15 @@ Este enfoque es conceptualmente simple, pero computacionalmente intratable inclu
 
 \section{Aproximación mediante Aprendizaje Automático}
 
-Para abordar la complejidad combinatoria de la selección de rutas en instancias de gran escala, se propone un modelo de aprendizaje por refuerzo basado en gradiente de política (Policy Gradient), específicamente utilizando el algoritmo REINFORCE. Este enfoque permite que un agente aprenda a construir secuencias de puertos que maximicen el potencial de ganancia, adaptándose a las restricciones temporales y operativas de forma dinámica.
+Para abordar la complejidad combinatoria de la selección de rutas en instancias de gran escala, se propone un modelo de aprendizaje por refuerzo basado en gradiente de política (Policy Gradient), específicamente utilizando el algoritmo REINFORCE \cite{russell2020}. Este enfoque permite que un agente aprenda a construir secuencias de puertos que maximicen el potencial de ganancia, adaptándose a las restricciones temporales y operativas de forma dinámica.
 
 \subsection{Arquitectura de la Red Neuronal}
 
 La arquitectura del agente se compone de dos módulos principales diseñados para procesar la información de la instancia y tomar decisiones secuenciales:
 
 \begin{itemize}
-    \item {Codificador de Instancia (Context Encoder):} Este componente recibe como entrada los parámetros estáticos del problema, incluyendo la matriz de tiempos de viaje, los pesos de las mercancías, los precios y stocks en cada puerto y las capacidades del barco. Mediante una serie de capas densas con activaciones ReLU, la red proyecta estas características en un espacio latente de alta dimensión ($d=256$), generando un vector de contexto que resume la configuración global del mercado y la geografía del problema.
-    \item {Red de Decodificación y Política (Policy Network):} Este componente actúa como el decodificador del sistema, integrando la representación latente de la instancia con el puerto actual (procesado mediante una capa de \textit{embedding}). A través de una serie de capas totalmente conectadas, la red proyecta esta información unificada en un vector de \textit{logits} de dimensión $|V|$. De esta forma, el agente genera una distribución de probabilidad que pondera el atractivo de cada puerto potencial, optimizando la selección de destinos que maximicen la ganancia esperada a largo plazo.
+    \item {Codificador de Instancia (Context Encoder):} Este componente recibe como entrada los parámetros estáticos del problema, incluyendo la matriz de tiempos de viaje, los pesos de las mercancías, los precios y stocks en cada puerto y las capacidades del barco. Mediante una serie de capas densas con activaciones ReLU, la red proyecta estas características en un espacio latente de alta dimensión ($d=256$), generando un vector de contexto que resume la configuración global del mercado y la geografía del problema \cite{Goodfellow-et-al-2016}.
+    \item {Red de Decodificación y Política (Policy Network):} Este componente actúa como el decodificador del sistema, integrando la representación latente de la instancia con el puerto actual (procesado mediante una capa de \textit{embedding}). A través de una serie de capas totalmente conectadas, la red proyecta esta información unificada en un vector de \textit{logits} de dimensión $|V|$. De esta forma, el agente genera una distribución de probabilidad que pondera el atractivo de cada puerto potencial, optimizando la selección de destinos que maximicen la ganancia esperada a largo plazo \cite{russell2020}.
 \end{itemize}
 
 \subsection{Representación del Estado y Enmascaramiento de Acciones}
@@ -412,7 +410,7 @@ El estado del agente en cada paso de tiempo se define por el puerto actual y el 
 
 \subsection{Proceso de Entrenamiento}
 
-A diferencia de los enfoques de aprendizaje supervisado, el agente se entrena mediante una estrategia de optimización al vuelo (on-the-fly) para cada instancia específica. Durante el entrenamiento, se generan múltiples episodios (rutas) utilizando una política estocástica con temperatura ajustable. La temperatura $\tau$ comienza en un valor alto para fomentar la exploración de diversas trayectorias y decae linealmente hacia un valor bajo, permitiendo que el agente converja hacia decisiones más deterministas y lucrativas. Las recompensas se calculan evaluando el capital final obtenido en cada ruta mediante los evaluadores de transacciones y los pesos de la red se actualizan para maximizar la esperanza del retorno.
+A diferencia de los enfoques de aprendizaje supervisado, el agente se entrena mediante una estrategia de optimización al vuelo (on-the-fly) para cada instancia específica. Durante el entrenamiento, se generan múltiples episodios (rutas) utilizando una política estocástica con temperatura ajustable. La temperatura $\tau$ comienza en un valor alto para fomentar la exploración de diversas trayectorias y decae linealmente hacia un valor bajo, permitiendo que el agente converja hacia decisiones más deterministas y lucrativas. Las recompensas se calculan evaluando el capital final obtenido en cada ruta mediante los evaluadores de transacciones y los pesos de la red se actualizan para maximizar la esperanza del retorno \cite{russell2020}.
 
 \section{Evaluadores}
 
@@ -420,7 +418,7 @@ Dada una ruta fija, el problema de determinar las transacciones óptimas se deno
 
 \subsection{Evaluación mediante Relajación Lineal}
 
-Para garantizar una resolución eficiente, se aplica una relajación de la restricción de integridad de las mercancías. Se asume que los bienes son infinitamente divisibles (variables continuas en lugar de enteras), lo que permite formular este desafío como un problema de Programación Lineal (LP). Si bien esta asunción simplifica la realidad física de ciertas mercancías, permite utilizar algoritmos de resolución exactos como Simplex.
+Para garantizar una resolución eficiente, se aplica una relajación de la restricción de integridad de las mercancías. Se asume que los bienes son infinitamente divisibles (variables continuas en lugar de enteras), lo que permite formular este desafío como un problema de Programación Lineal (LP). Si bien esta asunción simplifica la realidad física de ciertas mercancías, permite utilizar algoritmos de resolución exactos como Simplex \cite{cormen2009}. 
 
 Se asume asimismo que la ruta $R$ proporcionada como entrada ya satisface las restricciones temporales del problema original.
 
@@ -507,7 +505,7 @@ Como idea de alto nivel para la demostración de la correctitud del algoritmo de
 \end{proof}
 
 \begin{theorem}
-    El problema se reduce a un problema de planificación de intervalos ponderados
+    El problema se reduce a un problema de planificación de intervalos ponderados \cite{kleinberg2005}
 \end{theorem}
 
 \begin{proof}
@@ -592,7 +590,7 @@ El modelo bajo las asunciones tomadas posee tres propiedades fundamentales:
 
 Así, el subproblema para una mercancía se reduce a seleccionar emparejamientos rentables entre compras y ventas, respetando las capacidades máximas.
 
-El principio rector del algoritmo greedy es simple: vender primero donde más caro y comprar primero donde más barato, siempre que el orden temporal lo permita.
+El principio rector del algoritmo greedy es simple: vender primero donde más caro y comprar primero donde más barato, siempre que el orden temporal lo permita \cite{cormen2009, kleinberg2005}.
 
 Para una mercancía fija, el procedimiento conceptual es el siguiente:
 \begin{itemize}
@@ -720,7 +718,7 @@ El algoritmo greedy descrito produce una solución óptima para el Problema de e
 \end{theorem}
 
 \begin{proof}
-    Consideremos una mercancía fija. Demostraremos por inducción sobre el número de emparejamientos que el algoritmo greedy siempre está por delante de cualquier solución óptima.
+    Consideremos una mercancía fija. Demostraremos por inducción sobre el número de emparejamientos que el algoritmo greedy siempre está por delante de cualquier solución óptima \cite{kleinberg2005}.
     
     En el primer emparejamiento, el algoritmo selecciona el mayor $p^-_j$ posible y el menor $p^+_i$ posible con $i<j$, maximizando la ganancia del primer emparejamiento. Ninguna solución óptima puede obtener una ganancia mayor en su primer emparejamiento.
     
@@ -798,7 +796,7 @@ Programación Dinámica (Intervalos) & [98.12\%, 99.13\%] & 0.9858 \\
 
 El análisis de los ratios ($f_{RL}/f_{BF}$) revela que el agente alcanza, en promedio, más del 97\% de la ganancia óptima. Destaca especialmente el desempeño con el método de programación dinámica por intervalos, donde la mediana del ratio alcanza el 100\%, lo que indica que en al menos la mitad de los casos el agente halla la ruta óptima o una equivalente.
 
-Para verificar si la diferencia de rendimiento entre los métodos es estadísticamente significativa, se aplicó una prueba t-student para muestras relacionadas (paired t-test). El diseño del test se fundamenta en las siguientes premisas:
+Para verificar si la diferencia de rendimiento entre los métodos es estadísticamente significativa, se aplicó una prueba t-student para muestras relacionadas (paired t-test) \cite{ross2014}. El diseño del test se fundamenta en las siguientes premisas: 
 
 \begin{itemize}
     \item {Hipótesis Nula ($H_0$):} No existe una diferencia significativa entre las medias del capital óptimo y el capital del agente RL tras el ajuste de escala ($\mu_{BF} = \mu_{RL}^*$), lo que indicaría que el agente replica consistentemente una fracción constante del óptimo.
@@ -806,11 +804,14 @@ Para verificar si la diferencia de rendimiento entre los métodos es estadístic
     \item {Nivel de Significancia:} $\alpha = 0.05$.
 \end{itemize}
 
-En todos los experimentos realizados (Tabla \ref{tab:inferencial}), el p-valor resultante fue consistentemente superior a $0.05$. Bajo este criterio estadístico, no se dispone de evidencia suficiente para rechazar la hipótesis nula. Este resultado es de gran relevancia práctica, ya que permite afirmar con rigor estadístico que la aproximación mediante Reinforcement Learning no presenta una degradación significativa de la calidad de la solución frente al óptimo global en las instancias evaluadas, ofreciendo además una escalabilidad superior para problemas de mayor dimensión.
+En todos los experimentos realizados (Tabla \ref{tab:inferencial}), el p-valor resultante fue consistentemente superior a $0.05$. Bajo este criterio estadístico, no se dispone de evidencia suficiente para rechazar la hipótesis nula \cite{ross2014}. Este resultado es de gran relevancia práctica, ya que permite afirmar con rigor estadístico que la aproximación mediante Reinforcement Learning no presenta una degradación significativa de la calidad de la solución frente al óptimo global en las instancias evaluadas, ofreciendo además una escalabilidad superior para problemas de mayor dimensión.
 
 \section{Conclusiones}
 En este trabajo se presentó una formulación formal del problema El Comerciante Holandés, integrando decisiones de ruteo y transacciones comerciales en un único marco combinatorio. Se demostró que el problema es NP-duro mediante una reducción directa desde el Traveling Salesman Problem, lo que justifica la necesidad de enfoques aproximados o descomposiciones estructurales.
 
 Con este objetivo, se propuso una metodología basada en separar la búsqueda de rutas de su evaluación económica. Bajo esta perspectiva, se introdujeron distintos evaluadores de caminos que bajo asunciones relajadas, resuelven óptimamente el subproblema de maximización de ganancia para una ruta fija. Esta descomposición permite explorar el espacio de soluciones de manera eficiente y ofrece una base sólida para el diseño de heurísticas prácticas.
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
 
 \end{document}
