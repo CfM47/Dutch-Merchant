@@ -21,6 +21,11 @@
 
 \usepackage[spanish]{babel}  % activa idioma español
 
+\addto\captionsspanish{
+  \renewcommand{\tablename}{Tabla}
+}
+
+\usepackage{enumitem}
 
 % *** MATH PACKAGES ***
 \usepackage{amsmath}
@@ -751,60 +756,92 @@ El algoritmo greedy descrito produce una solución óptima para el Problema de e
 
 
 \section{Resultados y Comparaciones}
+\label{sec:results}
 
-Para validar la efectividad de la aproximación mediante Reinforcement Learning, se realizaron pruebas experimentales comparando el capital final obtenido por el agente RL frente a la solución óptima proporcionada por el método de fuerza bruta. Los experimentos se segmentaron según el evaluador de ganancias utilizado, empleando instancias con un rango de 5 a 9 puertos.
+Para evaluar cuantitativamente la efectividad de la aproximación basada en aprendizaje por refuerzo, se comparó el capital final obtenido por el agente RL con la solución óptima calculada mediante fuerza bruta. Los experimentos se realizaron sobre instancias con entre 5 y 9 puertos, utilizando tres evaluadores de ganancia distintos: relajación lineal (LP), heurística greedy y programación dinámica por intervalos.
 
-Los resultados (Tablas \ref{tab:descriptivos} y \ref{tab:inferencial}) demuestran que el agente RL logra capturar una fracción significativa del capital óptimo en todos los escenarios, manteniendo una consistencia notable a pesar de la complejidad del problema.
+La métrica principal de evaluación fue el \emph{ratio de desempeño} definido como $f_{RL}/f_{BF}$, donde $f_{RL}$ denota la ganancia obtenida por el agente y $f_{BF}$ el óptimo global. Adicionalmente, se analizó la frecuencia con la que el agente alcanza exactamente el óptimo y el comportamiento en la cola inferior de la distribución (peor 5\%), con el fin de caracterizar tanto el desempeño promedio como los casos adversos.
 
-\begin{table}[h]
-\renewcommand{\arraystretch}{1.3}
+Los resultados descriptivos se resumen en la Tabla~\ref{tab:descriptivos}. En todos los evaluadores considerados, el agente RL alcanza en promedio más del 97\% de la ganancia óptima. En particular, el evaluador greedy presenta un ratio medio del 99.39\% y una mediana cercana al óptimo, mientras que en el caso de programación dinámica por intervalos la mediana alcanza el 100\%, lo que indica que en al menos la mitad de las instancias el agente encuentra una solución óptima o equivalente. Asimismo, se observa que el agente alcanza exactamente el óptimo en aproximadamente entre el 43\% y el 48\% de los casos, dependiendo del evaluador.
+
+La validación inferencial incluyó tres contrastes estadísticos complementarios: 
+\begin{enumerate}[label=\roman*), nosep]
+    \item una prueba $t$ pareada para detectar diferencias medias \cite{ross2014}, 
+    \item un test de no-inferioridad con umbral del 95\%\cite{wellek2010}, y 
+    \item un test de equivalencia mediante el procedimiento Two One-Sided Tests (TOST) \cite{wellek2010}.
+\end{enumerate}
+
+Los resultados inferenciales se presentan en la Tabla~\ref{tab:inferencial}. La prueba de no-inferioridad, con un umbral del 95\%, rechaza de forma contundente la hipótesis de que el agente sea inferior al óptimo más allá de dicho margen en los tres escenarios evaluados. De manera consistente, el test de equivalencia (TOST) confirma que el desempeño del agente se mantiene dentro de un rango estrecho alrededor de su comportamiento medio.
+
+Por otro lado, la prueba t pareada detecta diferencias estadísticamente significativas entre el capital óptimo y el obtenido por el agente RL, lo cual es esperable dado que el agente no está diseñado para replicar exactamente la solución óptima en todos los casos, sino para aproximarla de forma eficiente. En conjunto, estos resultados permiten concluir que el enfoque propuesto es estadísticamente sólido, altamente competitivo frente al óptimo global y considerablemente más escalable para instancias de mayor tamaño.
+
+% \vspace{0.5em}
+
+\begin{table}[t]
+\centering
+\renewcommand{\arraystretch}{1.2}
 \caption{Desempeño del Agente RL: Estadísticos Descriptivos}
 \label{tab:descriptivos}
-\centering
-\begin{tabular}{|l|c|c|}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccc}
 \hline
-\textbf{Modelo de Evaluación} & \textbf{Ratio Medio} & \textbf{Mediana} \\
+\textbf{Evaluador} 
+& \textbf{Ratio Medio} 
+& \textbf{Mediana} 
+& \textbf{Óptimo (\%)} 
+& \textbf{Peor 5\%} \\
 \hline
-Relajación Lineal (LP) & 97.29\% & 99.08\% \\
-\hline
-Heurística Greedy & 99.39\% & 99.99\% \\
-\hline
-Programación Dinámica (Intervalos) & 98.62\% & 100.00\% \\
+LP 
+& 97.29\% 
+& 99.08\% 
+& 46.2\% 
+& $< 89.85\%$ \\
+Greedy 
+& 99.39\% 
+& 99.99\% 
+& 43.0\% 
+& $< 96.94\%$ \\
+Intervalos 
+& 98.62\% 
+& 100.00\% 
+& 48.0\% 
+& $< 93.24\%$ \\
 \hline
 \end{tabular}
+}
 \end{table}
 
-\begin{table}[h]
-\renewcommand{\arraystretch}{1.3}
-\caption{Validación Estadística: Intervalos de Confianza y Significancia}
+\vspace{-0.8em}
+
+\begin{table}[t]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\caption{Validación Estadística del Desempeño del Agente RL}
 \label{tab:inferencial}
-\centering
-\begin{tabular}{|l|c|c|}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lccc}
 \hline
-\textbf{Modelo de Evaluación} & \textbf{I.C. 95\% (Ratio)} & \textbf{p-valor} \\
+\textbf{Evaluador} 
+& \textbf{No-Inferioridad} 
+& \textbf{Equivalencia} 
+& \textbf{t pareada} \\
 \hline
-Relajación Lineal (LP) & [96.97\%, 97.61\%] & 0.4320 \\
-\hline
-Heurística Greedy & [99.13\%, 99.65\%] & 0.2904 \\
-\hline
-Programación Dinámica (Intervalos) & [98.12\%, 99.13\%] & 0.9858 \\
+LP 
+& $p < 10^{-6}$ 
+& $p < 10^{-6}$ 
+& Significativa \\
+Greedy 
+& $p < 10^{-6}$ 
+& $p < 10^{-6}$ 
+& Significativa \\
+Intervalos 
+& $p < 10^{-6}$ 
+& $p < 10^{-6}$ 
+& Significativa \\
 \hline
 \end{tabular}
+}
 \end{table}
-
-\subsection{Análisis Estadístico y Prueba de Hipótesis}
-
-El análisis de los ratios ($f_{RL}/f_{BF}$) revela que el agente alcanza, en promedio, más del 97\% de la ganancia óptima. Destaca especialmente el desempeño con el método de programación dinámica por intervalos, donde la mediana del ratio alcanza el 100\%, lo que indica que en al menos la mitad de los casos el agente halla la ruta óptima o una equivalente.
-
-Para verificar si la diferencia de rendimiento entre los métodos es estadísticamente significativa, se aplicó una prueba t-student para muestras relacionadas (paired t-test) \cite{ross2014}. El diseño del test se fundamenta en las siguientes premisas: 
-
-\begin{itemize}
-    \item {Hipótesis Nula ($H_0$):} No existe una diferencia significativa entre las medias del capital óptimo y el capital del agente RL tras el ajuste de escala ($\mu_{BF} = \mu_{RL}^*$), lo que indicaría que el agente replica consistentemente una fracción constante del óptimo.
-    \item {Hipótesis Alternativa ($H_1$):} Existe una diferencia significativa entre los rendimientos corregidos ($\mu_{BF} \neq \mu_{RL}^*$).
-    \item {Nivel de Significancia:} $\alpha = 0.05$.
-\end{itemize}
-
-En todos los experimentos realizados (Tabla \ref{tab:inferencial}), el p-valor resultante fue consistentemente superior a $0.05$. Bajo este criterio estadístico, no se dispone de evidencia suficiente para rechazar la hipótesis nula \cite{ross2014}. Este resultado es de gran relevancia práctica, ya que permite afirmar con rigor estadístico que la aproximación mediante Reinforcement Learning no presenta una degradación significativa de la calidad de la solución frente al óptimo global en las instancias evaluadas, ofreciendo además una escalabilidad superior para problemas de mayor dimensión.
 
 \section{Conclusiones}
 En este trabajo se presentó una formulación formal del problema El Comerciante Holandés, integrando decisiones de ruteo y transacciones comerciales en un único marco combinatorio. Se demostró que el problema es NP-duro mediante una reducción directa desde el Traveling Salesman Problem, lo que justifica la necesidad de enfoques aproximados o descomposiciones estructurales.
