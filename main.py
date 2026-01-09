@@ -81,7 +81,8 @@ def run_experiment(num_cases, config):
 
         # RL Solver
         rl_solver = RLSolver(num_epochs=50, episodes_per_epoch=5, verbose=False)
-        rl_path = rl_solver.solve(rl_inst)
+        log_path = f"results/logs/case_{i+1}_log.json"
+        rl_path = rl_solver.solve(rl_inst, log_path=log_path, extra_data={"bf_profit": bf_profit})
         rl_profit = evaluate_with_rust(rust_inst, rl_path)
 
         ratio = (rl_profit / bf_profit if bf_profit > 0 else (1.0 if rl_profit == 0 else 0.0))
@@ -213,8 +214,8 @@ def main():
     import sys
     
     config = RandomConfig(
-        n_ports_range=(5, 9),
-        n_goods_range=(3, 6),
+        n_ports_range=(6, 9),
+        n_goods_range=(3, 8),
         travel_time_range=(5.0, 20.0),
         price_range=(50.0, 150.0),
         weight_range=(1.0, 5.0),
@@ -229,21 +230,21 @@ def main():
 
     # Always run experiments
     print("\nRunning experiments...")
-    results = run_experiment(50, config)
+    results = run_experiment(10, config)
     json_path = None
 
-    # Perform statistical tests
-    stats_dict = perform_statistical_tests(results)
+    # # Perform statistical tests
+    # stats_dict = perform_statistical_tests(results)
     
-    # Generate report
-    generate_statistical_report(results, stats_dict, config)
+    # # Generate report
+    # generate_statistical_report(results, stats_dict, config)
     
-    # Save raw results (only if they were newly generated)
-    if not json_path or not json_path.exists():
-        results_path = Path("experiment_results.json")
-        with open(results_path, 'w') as f:
-            json.dump(results, f, indent=2)
-        print(f"Raw results saved to {results_path.absolute()}")
+    # # Save raw results (only if they were newly generated)
+    # if not json_path or not json_path.exists():
+    #     results_path = Path("experiment_results.json")
+    #     with open(results_path, 'w') as f:
+    #         json.dump(results, f, indent=2)
+    #     print(f"Raw results saved to {results_path.absolute()}")
 
 if __name__ == "__main__":
     main()

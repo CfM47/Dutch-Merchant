@@ -16,7 +16,7 @@ from .schemas import Instance
 class PolicyNetwork(nn.Module):
     """Neural network that outputs a probability distribution over ports."""
     
-    def __init__(self, n_ports: int, embedding_dim: int = 128, hidden_dim: int = 256):
+    def __init__(self, n_ports: int, embedding_dim: int = 128, hidden_dim: int = 512):
         super().__init__()
         self.n_ports = n_ports
         self.embedding_dim = embedding_dim
@@ -27,9 +27,13 @@ class PolicyNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
         )
         self.decoder = nn.Sequential(
             nn.Linear(hidden_dim + embedding_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, n_ports),
         )
@@ -63,7 +67,7 @@ class PolicyGradientAgent(nn.Module):
         n_ports: int,
         n_goods: int,
         embedding_dim: int = 128,
-        hidden_dim: int = 256,
+        hidden_dim: int = 512,
         max_steps: int = 50,
     ):
         super().__init__()
@@ -76,6 +80,8 @@ class PolicyGradientAgent(nn.Module):
         self.instance_encoder = nn.Sequential(
             nn.Linear(n_ports * n_ports + n_goods + n_ports * n_goods * 4 + n_ports + 4, 
                       hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, embedding_dim * 2),
         )
@@ -122,10 +128,20 @@ class PolicyGradientAgent(nn.Module):
         mask: Optional[torch.Tensor] = None,
         greedy: bool = False,
         temperature: float = 1.0,
+        forced_action: Optional[int] = None,
     ) -> Tuple[int, Optional[torch.Tensor]]:
         """Select next port to visit."""
         if self.instance_features is None:
             raise ValueError("No instance loaded. Call receive_instance first.")
+        
+        # For forced actions during replay, don't apply mask to preserve valid log_probs
+        if forced_action is not None:
+            logits_unmasked = self.policy(self.instance_features, current_port, None)
+            probs = F.softmax(logits_unmasked / max(temperature, 1e-6), dim=-1)
+            dist = Categorical(probs)
+            action = torch.tensor(forced_action).to(logits_unmasked.device)
+            log_prob = dist.log_prob(action)
+            return action.item(), log_prob
         
         logits = self.policy(self.instance_features, current_port, mask)
         
@@ -145,6 +161,7 @@ class PolicyGradientAgent(nn.Module):
         greedy: bool = False,
         return_log_probs: bool = False,
         temperature: float = 1.0,
+        forced_solution: Optional[List[int]] = None,
     ) -> List[int]:
         """Generate a complete solution (sequence of ports)."""
         if self.current_instance is None:
@@ -158,6 +175,12 @@ class PolicyGradientAgent(nn.Module):
         
         if return_log_probs:
             self.saved_log_probs = []
+            
+        forced_steps = []
+        forced_idx = 0
+        if forced_solution is not None:
+             if len(forced_solution) > 2:
+                 forced_steps = forced_solution[1:-1]
         
         for step in range(self.max_steps):
             mask = torch.ones(1, self.n_ports, dtype=torch.bool)
@@ -178,12 +201,23 @@ class PolicyGradientAgent(nn.Module):
             if not any_valid:
                 break
             
+            # Prepare forced action
+            current_forced_action = None
+            if forced_solution is not None:
+                if forced_idx < len(forced_steps):
+                    current_forced_action = forced_steps[forced_idx]
+                else:
+                    break
+
             next_port, log_prob = self.select_action(
-                current_port, mask, greedy, temperature
+                current_port, mask, greedy, temperature, current_forced_action
             )
             
             if return_log_probs and log_prob is not None:
                 self.saved_log_probs.append(log_prob)
+            
+            if forced_solution is not None:
+                forced_idx += 1
             
             current_time += self.current_instance.travel_time[current_port][next_port]
             solution.append(next_port)

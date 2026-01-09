@@ -25,18 +25,21 @@ class Solver:
         self,
         checkpoint_path: Optional[str] = None,
         device: str = "cpu",
-        embedding_dim: int = 128,
-        hidden_dim: int = 1024,
-        max_steps: int = 50,
+        embedding_dim: int = 512,
+        hidden_dim: int = 2024,
+        max_steps: int = 10,
         # Training hyperparameters
         num_epochs: int = 100,
         episodes_per_epoch: int = 10,
         learning_rate: float = 1e-4,
         baseline_decay: float = 0.99,
         # Exploration hyperparameters
-        start_temp: float = 80.0,
+        start_temp: float = 40.0,
         end_temp: float = 0.1,
         verbose: bool = True,
+        # Memory hyperparameters
+        memory_size: int = 4,
+        replay_frequency: int = 4,
     ):
         """
         Initialize the Solver.
@@ -54,6 +57,8 @@ class Solver:
             start_temp: Initial temperature for exploration.
             end_temp: Final temperature for exploitation.
             verbose: Whether to print training progress.
+            memory_size: Number of top solutions to keep in memory.
+            replay_frequency: Frequency (in epochs) to replay memory.
         """
         self.checkpoint_path = checkpoint_path
         self.device = device
@@ -67,10 +72,12 @@ class Solver:
         self.start_temp = start_temp
         self.end_temp = end_temp
         self.verbose = verbose
+        self.memory_size = memory_size
+        self.replay_frequency = replay_frequency
         
         self.agent: Optional[PolicyGradientAgent] = None
 
-    def solve(self, instance: Instance, log_path: Optional[str] = None) -> List[int]:
+    def solve(self, instance: Instance, log_path: Optional[str] = None, extra_data: Optional[dict] = None) -> List[int]:
         """
         Solve a given problem instance using the RL agent.
         
@@ -82,6 +89,7 @@ class Solver:
         Args:
             instance: The problem instance to solve.
             log_path: Optional path to save training history (rewards and solutions) as a JSON file.
+            extra_data: Optional dictionary to save along with the logs (e.g. brute force optimal).
 
         Returns:
             A list of port IDs representing the solution path.
@@ -123,6 +131,7 @@ class Solver:
         # We can track the best solution found during training
         best_reward = float('-inf')
         best_solution: List[int] = []
+        top_solutions = [] # List of (reward, solution) for memory replay
         
         training_history = []
 
@@ -131,9 +140,10 @@ class Solver:
 
         self.agent.train()
         for epoch in range(self.num_epochs):
-            # Calculate current temperature (linear decay)
+            # Calculate current temperature (exponential decay)
             if self.num_epochs > 1:
-                temp = self.start_temp + (self.end_temp - self.start_temp) * (epoch / (self.num_epochs - 1))
+                progress = epoch / (self.num_epochs - 1)
+                temp = self.start_temp * ((self.end_temp / self.start_temp) ** progress)
             else:
                 temp = self.end_temp
 
@@ -160,6 +170,18 @@ class Solver:
                     best_reward = reward
                     best_solution = solution[:]
                 
+                # Update memory
+                # Only add if not duplicate path (simple check)
+                is_duplicate = any(x[1] == solution for x in top_solutions)
+                if not is_duplicate:
+                    if len(top_solutions) < self.memory_size:
+                        top_solutions.append((reward, solution[:]))
+                        top_solutions.sort(key=lambda x: x[0], reverse=True)
+                    elif reward > top_solutions[-1][0]:
+                        top_solutions.pop()
+                        top_solutions.append((reward, solution[:]))
+                        top_solutions.sort(key=lambda x: x[0], reverse=True)
+                
                 # Log history if requested
                 if log_path:
                     training_history.append({
@@ -180,6 +202,39 @@ class Solver:
                 # Update baseline
                 baseline = self.baseline_decay * baseline + (1 - self.baseline_decay) * reward
             
+            # Replay Memory - reinforce the best solutions found
+            if (epoch + 1) % self.replay_frequency == 0 and top_solutions:
+                replay_losses = []
+                for mem_reward, mem_sol in top_solutions:
+                     # Need to re-encode instance to create fresh graph for backprop
+                     self.agent.receive_instance(instance)
+                     
+                     # Re-run to get fresh log_probs for the stored solution
+                     self.agent.generate_solution(
+                         greedy=False,
+                         return_log_probs=True,
+                         temperature=1.0,  # Use temperature=1 for stable replay
+                         forced_solution=mem_sol
+                     )
+                     
+                     # Skip if no log_probs were saved (solution too short)
+                     if not self.agent.saved_log_probs:
+                         continue
+                     
+                     # Update model with stored reward
+                     loss = self.agent.compute_loss_with_baseline(mem_reward, baseline)
+                     replay_losses.append(loss.item())
+                     
+                     optimizer.zero_grad()
+                     loss.backward()
+                     optimizer.step()
+                     
+                     # Update baseline with replayed reward
+                     baseline = self.baseline_decay * baseline + (1 - self.baseline_decay) * mem_reward
+                
+                if self.verbose and replay_losses:
+                    print(f"  [Memory Replay] Replayed {len(replay_losses)} solutions, top reward: {top_solutions[0][0]:.4f}")
+            
             if self.verbose and (epoch + 1) % 10 == 0:
                 avg_reward = np.mean(epoch_rewards)
                 print(f"Epoch {epoch + 1}/{self.num_epochs} | Temp: {temp:.4f} | Avg Reward: {avg_reward:.4f} | Best: {best_reward:.4f}")
@@ -189,8 +244,14 @@ class Solver:
             try:
                 # Ensure directory exists
                 os.makedirs(os.path.dirname(log_path), exist_ok=True)
+                
+                output_data = {
+                    "history": training_history,
+                    "extra_data": extra_data or {}
+                }
+                
                 with open(log_path, 'w') as f:
-                    json.dump(training_history, f, indent=2)
+                    json.dump(output_data, f, indent=2)
                 if self.verbose:
                     print(f"Training history saved to {log_path}")
             except Exception as e:

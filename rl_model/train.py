@@ -22,6 +22,9 @@ def train(
     max_steps: int = 50,
     device: str = "cpu",
     verbose: bool = True,
+    initial_temp: float = 2.0,
+    min_temp: float = 0.1,
+    temp_decay: float = 0.95,
 ) -> PolicyGradientAgent:
     """
     Train the Policy Gradient agent using REINFORCE.
@@ -35,6 +38,9 @@ def train(
         max_steps: Maximum steps in a solution.
         device: Device to train on ('cpu' or 'cuda').
         verbose: Whether to print training progress.
+        initial_temp: Initial temperature for exploration.
+        min_temp: Minimum temperature after decay.
+        temp_decay: Decay rate for temperature per epoch.
         
     Returns:
         The trained PolicyGradientAgent.
@@ -55,6 +61,8 @@ def train(
     best_reward = float('-inf')
     best_solution = None
     
+    current_temp = initial_temp
+    
     for epoch in range(num_epochs):
         epoch_rewards = []
         epoch_losses = []
@@ -67,6 +75,7 @@ def train(
                 solution = agent.generate_solution(
                     greedy=False,
                     return_log_probs=True,
+                    temperature=current_temp,
                 )
                 
                 # Use score_route from scoring module
@@ -87,13 +96,17 @@ def train(
                 
                 baseline = baseline_decay * baseline + (1 - baseline_decay) * reward
         
+        # Decay temperature
+        current_temp = max(min_temp, current_temp * temp_decay)
+        
         if verbose:
             avg_reward = np.mean(epoch_rewards)
             avg_loss = np.mean(epoch_losses)
             print(f"Epoch {epoch + 1}/{num_epochs} | "
                   f"Avg Reward: {avg_reward:.4f} | "
                   f"Avg Loss: {avg_loss:.4f} | "
-                  f"Best: {best_reward:.4f}")
+                  f"Best: {best_reward:.4f} | "
+                  f"Temp: {current_temp:.4f}")
     
     if verbose:
         print(f"\nTraining complete!")
