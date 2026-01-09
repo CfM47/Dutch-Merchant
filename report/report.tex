@@ -451,39 +451,43 @@ La red de política decide el siguiente movimiento basándose en el contexto glo
 
 \subsubsection{Mecanismo de Enmascaramiento y Selección}
 
-\begin{en}
-1.  Se calcula una máscara de validez $M_t \in \{0, 1\}^N$.
-2.  Los logits correspondientes a puertos inválidos se establecen en $-\infty$.
-3.  Se aplica una función \textbf{Softmax} para obtener una distribución de probabilidad válida:
+\begin{enumerate}
+    \item Se calcula una máscara de validez $M_t \in \{0, 1\}^N$.
+    \item Los logits correspondientes a puertos inválidos se establecen en $-\infty$.
+    \item Se aplica una función Softmax para obtener una distribución de probabilidad válida:
+\end{enumerate}
     \[ \pi_\theta(v_{t+1} | v_t, \mathcal{I}) = \text{Softmax}(\text{Logits}) \]
 
 \subsubsection{Especificaciones Técnicas (V1)}
 
 La implementación inicial en PyTorch se estructura con:
 \begin{itemize}
-    \item \textbf{Hiperparámetros Base}: Embedding Dim: 128, Hidden Dim: 1024, Optimizador Adam ($10^{-4}$).
-    \item \textbf{Encoder}: Linear $\to$ ReLU $\to$ Linear.
-    \item \textbf{Decoder}: Linear $\to$ ReLU $\to$ Linear.
+    \item Hiperparámetros Base: Embedding Dim: 128, Hidden Dim: 1024, Optimizador Adam ($10^{-4}$).
+    \item Encoder: Linear $\to$ ReLU $\to$ Linear.
+    \item Decoder: Linear $\to$ ReLU $\to$ Linear.
 \end{itemize}
 
 \subsection{Algoritmo de Entrenamiento Base: REINFORCE}
 
-El entrenamiento base utiliza el algoritmo de gradiente de política \textbf{REINFORCE}, optimizando la esperanza del beneficio $J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} [R(\tau)]$.
+El entrenamiento base utiliza el algoritmo de gradiente de política REINFORCE, optimizando la esperanza del beneficio $J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} [R(\tau)]$.
 
 El gradiente se estima mediante:
 \[ \nabla_\theta J(\theta) \approx \frac{1}{M} \sum_{i=1}^M \sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t^{(i)} | s_t^{(i)}) \cdot (R(\tau^{(i)}) - b) \]
 donde $b$ es una línea base (baseline) móvil calculada como promedio exponencial.
 
 \subsubsection{Estrategia de Exploración}
-Implementamos una estrategia de \textbf{Temperature Scaling} en la función Softmax:
+Se implementó una estrategia de Temperature Scaling en la función Softmax:
 \[ \pi(a_i) = \frac{\exp(z_i / \tau)}{\sum_j \exp(z_j / \tau)} \]
 La temperatura $\tau$ decae exponencialmente de 40.0 a 0.1 durante el entrenamiento, pasando de exploración a explotación.
 
 \subsubsection{Entrenamiento ``On-the-Fly" (Active Search)}
 El modelo se entrena específicamente para cada instancia (\textit{Active Search}):
-1. Inicializa los pesos.
-2. Realiza múltiples iteraciones sobre la \textbf{misma instancia}.
-3. Mantiene un registro de la mejor solución encontrada.
+
+\begin{enumerate}
+    \item Inicializa los pesos.
+    \item Realiza múltiples iteraciones sobre la misma instancia.
+    \item Mantiene un registro de la mejor solución encontrada.
+\end{enumerate}
 
 \subsection{Mejora del Modelo: Arquitectura V2 con Memory Replay}
 
@@ -492,12 +496,12 @@ Para mejorar la estabilidad y capacidad de convergencia, se desarrolló una vers
 \subsubsection{Nueva Arquitectura Profunda (V2)}
 Se incrementó la capacidad de la red:
 \begin{itemize}
-    \item \textbf{Dimensiones Aumentadas}: Embedding: $128 \to 512$, Hidden: $1024 \to 2048$.
-    \item \textbf{Profundidad Adicional}: Capas adicionales en el codificador de contexto y decodificador para permitir un razonamiento más abstracto.
+    \item Dimensiones Aumentadas: Embedding: $128 \to 512$, Hidden: $1024 \to 2048$.
+    \item Profundidad Adicional: Capas adicionales en el codificador de contexto y decodificador para permitir un razonamiento más abstracto.
 \end{itemize}
 
 \subsubsection{Memory Replay: Refuerzo de Soluciones Élite}
-Se incorpora un \textbf{buffer de memoria} que almacena las $K=4$ mejores rutas encontradas.
+Se incorpora un buffer de memoria que almacena las $K=4$ mejores rutas encontradas.
 Con frecuencia configurable (cada 4 epochs), se ejecuta una fase de replay:
 \begin{enumerate}
     \item Para cada ruta élite en memoria, forzar la generación de la ruta.
@@ -506,6 +510,7 @@ Con frecuencia configurable (cada 4 epochs), se ejecuta una fase de replay:
 \end{enumerate}
 
 Este mecanismo estabiliza el aprendizaje y acelera la convergencia al reforzar patrones exitosos.
+
 
 \section{Evaluadores}
 
