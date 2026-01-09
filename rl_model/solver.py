@@ -8,6 +8,8 @@ import torch
 import torch.optim as optim
 import numpy as np
 from collections import deque
+import json
+import os
 
 from .schemas import Instance
 from .agent import PolicyGradientAgent
@@ -68,7 +70,7 @@ class Solver:
         
         self.agent: Optional[PolicyGradientAgent] = None
 
-    def solve(self, instance: Instance) -> List[int]:
+    def solve(self, instance: Instance, log_path: Optional[str] = None) -> List[int]:
         """
         Solve a given problem instance using the RL agent.
         
@@ -79,6 +81,7 @@ class Solver:
 
         Args:
             instance: The problem instance to solve.
+            log_path: Optional path to save training history (rewards and solutions) as a JSON file.
 
         Returns:
             A list of port IDs representing the solution path.
@@ -120,6 +123,8 @@ class Solver:
         # We can track the best solution found during training
         best_reward = float('-inf')
         best_solution: List[int] = []
+        
+        training_history = []
 
         if self.verbose:
             print(f"Starting training on instance for {self.num_epochs} epochs...")
@@ -135,7 +140,7 @@ class Solver:
             epoch_rewards = []
             epoch_losses = []
             
-            for _ in range(self.episodes_per_epoch):
+            for episode_idx in range(self.episodes_per_epoch):
                 # Set the instance for the agent (re-compute features to create fresh graph)
                 self.agent.receive_instance(instance)
 
@@ -155,6 +160,15 @@ class Solver:
                     best_reward = reward
                     best_solution = solution[:]
                 
+                # Log history if requested
+                if log_path:
+                    training_history.append({
+                        "epoch": epoch,
+                        "episode": episode_idx,
+                        "reward": float(reward),
+                        "solution": [int(x) for x in solution] # ensure json serializable
+                    })
+                
                 # Update model
                 loss = self.agent.compute_loss_with_baseline(reward, baseline)
                 epoch_losses.append(loss.item())
@@ -169,6 +183,18 @@ class Solver:
             if self.verbose and (epoch + 1) % 10 == 0:
                 avg_reward = np.mean(epoch_rewards)
                 print(f"Epoch {epoch + 1}/{self.num_epochs} | Temp: {temp:.4f} | Avg Reward: {avg_reward:.4f} | Best: {best_reward:.4f}")
+
+        # Save history if requested
+        if log_path:
+            try:
+                # Ensure directory exists
+                os.makedirs(os.path.dirname(log_path), exist_ok=True)
+                with open(log_path, 'w') as f:
+                    json.dump(training_history, f, indent=2)
+                if self.verbose:
+                    print(f"Training history saved to {log_path}")
+            except Exception as e:
+                print(f"Error saving training history: {e}")
 
         # --- Inference ---
         # We could return best_solution found during training, 
