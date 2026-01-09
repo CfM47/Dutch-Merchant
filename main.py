@@ -227,28 +227,10 @@ def main():
         max_value=100.0
     )
 
-    # Check if a JSON file path is provided as a command-line argument
+    # Always run experiments
+    print("\nRunning experiments...")
+    results = run_experiment(50, config)
     json_path = None
-    if len(sys.argv) > 1:
-        json_path = Path(sys.argv[1])
-    else:
-        # Check for the specific files or default file
-        default_files = [
-            Path("experiment_results_fractional_lp.json"),
-        ]
-        for p in default_files:
-            if p.exists():
-                json_path = p
-                break
-
-    if json_path and json_path.exists():
-        print(f"\nLoading results from {json_path}...")
-        with open(json_path, 'r') as f:
-            results = json.load(f)
-    else:
-        # Run cases for verification if no JSON is found
-        print("\nNo JSON results found. Running experiments...")
-        results = run_experiment(50, config) # Default to 50 for quick run
 
     # Perform statistical tests
     stats_dict = perform_statistical_tests(results)
