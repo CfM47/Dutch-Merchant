@@ -101,7 +101,7 @@ Donde:
 ### 3.2. Estrategia de Exploración
 Para evitar óptimos locales prematuros, implementamos una estrategia de **Temperature Scaling** en la función Softmax:
 $$ \pi(a_i) = \frac{\exp(z_i / \tau)}{\sum_j \exp(z_j / \tau)} $$
-*   La temperatura $\tau$ comienza en un valor alto ($80.0$), promoviendo una exploración casi uniforme.
+*   La temperatura $\tau$ comienza en un valor alto ($40.0$), promoviendo una exploración casi uniforme.
 *   Decae exponencialmente hacia un valor bajo ($0.1$) durante el entrenamiento, haciendo que la política se vuelva más determinista y explote las mejores rutas encontradas.
 
 ### 3.3. Entrenamiento "On-the-Fly" (Active Search)
