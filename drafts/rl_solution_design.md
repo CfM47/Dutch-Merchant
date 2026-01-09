@@ -59,16 +59,16 @@ Para garantizar la factibilidad de las soluciones:
 
 ### 2.4. Especificaciones Técnicas y Capas de la Red
 
-La implementación concreta en `PyTorch` se estructura en dos módulos principales con las siguientes dimensiones y características (basadas en los hiperparámetros por defecto):
+La implementación inicial en `PyTorch` se estructura en dos módulos principales con las siguientes dimensiones y características:
 
 *   **Hiperparámetros Base**:
     *   Dimensión de Embedding ($d_{emb}$): 128
-    *   Dimensión Oculta ($d_{hidden}$): 1024 (configurable, usualmente mayor que $d_{emb}$)
+    *   Dimensión Oculta ($d_{hidden}$): 1024
     *   Función de Activación: ReLU
     *   Optimizador: Adam con learning rate $\alpha = 1\times 10^{-4}$
 
 *   **1. Instance Encoder Global (Pre-procesamiento)**:
-    *   Responsable de comprimir el vector plano de características de la instancia (tamaño variable según $N$ y $M$) en un espacio latente inicial.
+    *   Responsable de comprimir el vector plano de características de la instancia en un espacio latente inicial.
     *   `Linear(Input_Size, Hidden_Dim)` $\to$ `ReLU`
     *   `Linear(Hidden_Dim, Embedding_Dim * 2)`
     *   *Salida*: Tensor de características de instancia de tamaño $2 \times d_{emb}$.
@@ -84,9 +84,9 @@ La implementación concreta en `PyTorch` se estructura en dos módulos principal
         *   `Linear(Hidden_Dim, N_Ports)`
         *   *Salida*: Logits brutos antes del Softmax.
 
-## 3. Algoritmo de Entrenamiento: REINFORCE
+## 3. Algoritmo de Entrenamiento Base: REINFORCE
 
-El entrenamiento se realiza utilizando el algoritmo de gradiente de política **REINFORCE**, optimizando directamente la esperanza del beneficio.
+El entrenamiento base se realiza utilizando el algoritmo de gradiente de política **REINFORCE**, optimizando directamente la esperanza del beneficio.
 
 ### 3.1. Función Objetivo
 El objetivo es maximizar el beneficio esperado $J(\theta)$:
@@ -110,13 +110,35 @@ El modelo se entrena específicamente para cada instancia del problema ("Active 
 2.  Realiza múltiples iteraciones de entrenamiento sobre la **misma instancia**.
 3.  Mantiene un registro de la mejor solución (best-so-far) encontrada durante el proceso de exploración estocástica.
 
-Esta estrategia permite que la red neuronal actúe como un mecanismo de búsqueda guiada inteligente, adaptándose a las particularidades específicas de la topología de precios y distancias de la instancia que se está resolviendo.
+## 4. Mejora del Modelo: Arquitectura V2 con Memory Replay
 
-## 4. Integración y Detalles Técnicos
+Para mejorar la estabilidad y capacidad de convergencia del modelo base, se desarrolló una versión actualizada (V2) que incorpora una arquitectura más profunda y un mecanismo de **Experience Replay**.
 
-*   **Framework**: PyTorch para la construcción y diferenciación automática de la red neuronal.
-*   **Optimizador**: Adam, conocido por su eficiencia en problemas de RL.
-*   **Evaluación de Rutas**: La crítica eficiencia en el cálculo de $R(\tau)$ se logra mediante la integración con el núcleo del sistema en **Rust** (vía PyO3). La red neuronal solo genera la secuencia de puertos (topología de la ruta), y el módulo de Rust calcula de forma determinista y óptima las transacciones de compra/venta (flujo de bienes) para esa secuencia en microsegundos, devolviendo el beneficio neto.
+### 4.1. Nueva Arquitectura Profunda (V2)
+Se ha incrementado significativamente la capacidad de la red para capturar relaciones complejas en el espacio de estados:
 
----
-*Este diseño combina la capacidad de exploración y aprendizaje de patrones de las redes neuronales con la eficiencia de cálculo numérico de bajo nivel de Rust, ofreciendo una metaheurística potente para el Problema del Comerciante Holandés.*
+*   **Dimensiones Aumentadas**:
+    *   Embedding Dimension: $128 \to 512$
+    *   Hidden Dimension: $1024 \to 2048$
+*   **Profundidad Adicional**: Se añadieron capas lineales adicionales tanto en el codificador de contexto como en el decodificador para permitir un razonamiento más abstracto.
+    *   *Context Processor V2*: `Linear` -> `ReLU` -> `Linear` -> `ReLU` -> `Linear` -> `ReLU`
+    *   *Decoder V2*: `Linear` -> `ReLU` -> `Linear` -> `ReLU` -> `Linear`
+
+### 4.2. Memory Replay: Refuerzo de Soluciones Élite
+
+Una mejora fundamental es la incorporación de un **buffer de memoria** que almacena las mejores soluciones encontradas. Este mecanismo permite re-entrenar periódicamente sobre trayectorias de alta calidad.
+
+#### 4.2.1. Estructura y Mecanismo
+Se mantiene una cola de prioridad $\mathcal{M}$ de tamaño fijo $K=4$ que almacena las mejores rutas $(\tau, R(\tau))$.
+Con frecuencia configurable (cada 4 epochs), se ejecuta una fase de replay:
+
+```
+Para cada ruta élite en memoria:
+    1. Forzar la generación de la ruta (Forced Solution)
+    2. Calcular log-ratios con temperatura estable (1.0)
+    3. Actualizar la política usando la recompensa almacenada
+```
+
+#### 4.2.2. Beneficios Observados
+*   **Estabilización**: Las actualizaciones frecuentes sobre soluciones de alta calidad anclan la política hacia regiones prometedoras.
+*   **Aceleración**: Reduce la varianza del gradiente al reforzar patrones exitosos múltiples veces.

@@ -391,31 +391,121 @@ Una estrategia directa consiste en explorar exhaustivamente ambas dimensiones:
 
 Este enfoque es conceptualmente simple, pero computacionalmente intratable incluso para instancias relativamente pequeñas. La explosión combinatoria es doble: exponencial tanto en el número de puertos y como en el número de mercancías y cantidades transaccionadas.
 
-\section{Aproximación mediante Aprendizaje Automático}
 
-Para abordar la complejidad combinatoria de la selección de rutas en instancias de gran escala, se propone un modelo de aprendizaje por refuerzo basado en gradiente de política (Policy Gradient), específicamente utilizando el algoritmo REINFORCE \cite{russell2020}. Este enfoque permite que un agente aprenda a construir secuencias de puertos que maximicen el potencial de ganancia, adaptándose a las restricciones temporales y operativas de forma dinámica.
+\section{Diseño y Análisis de la Solución de Aprendizaje por Refuerzo}
 
-\subsection{Arquitectura de la Red Neuronal}
+Este enfoque se enmarca dentro de la categoría de \textit{Neural Combinatorial Optimization}, donde se entrena una red neuronal para construir soluciones heurísticas de alta calidad mediante aprendizaje.
 
-La arquitectura del agente se compone de dos módulos principales diseñados para procesar la información de la instancia y tomar decisiones secuenciales:
+\subsection{Formalización como Proceso de Decisión de Markov (MDP)}
+
+Para aplicar aprendizaje por refuerzo (RL), modelamos la construcción de la ruta del comerciante como un problema de toma de decisiones secuencial.
 
 \begin{itemize}
-    \item {Codificador de Instancia (Context Encoder):} Este componente recibe como entrada los parámetros estáticos del problema, incluyendo la matriz de tiempos de viaje, los pesos de las mercancías, los precios y stocks en cada puerto y las capacidades del barco. Mediante una serie de capas densas con activaciones ReLU, la red proyecta estas características en un espacio latente de alta dimensión ($d=256$), generando un vector de contexto que resume la configuración global del mercado y la geografía del problema \cite{Goodfellow-et-al-2016}.
-    \item {Red de Decodificación y Política (Policy Network):} Este componente actúa como el decodificador del sistema, integrando la representación latente de la instancia con el puerto actual (procesado mediante una capa de \textit{embedding}). A través de una serie de capas totalmente conectadas, la red proyecta esta información unificada en un vector de \textit{logits} de dimensión $|V|$. De esta forma, el agente genera una distribución de probabilidad que pondera el atractivo de cada puerto potencial, optimizando la selección de destinos que maximicen la ganancia esperada a largo plazo \cite{russell2020}.
+    \item Estado ($S_t$): El estado en el paso $t$ se define por la tupla $(v_t, \mathcal{I}, \mathcal{V}_t)$, donde:
+    \begin{itemize}
+        \item $v_t$: Es el puerto actual en el que se encuentra el agente.
+        \item $\mathcal{I}$: Representa la información estática de la instancia del problema (matrices de tiempos de viaje, precios de compra/venta, capacidades, límites de tiempo, etc.).
+        \item $\mathcal{V}_t$: Es el conjunto de puertos ya visitados o inalcanzables debido a las restricciones de tiempo.
+    \end{itemize}
+    Se excluye deliberadamente el inventario actual del vector de estado. Este diseño desacopla el problema de navegación (decisiones de la red neuronal) del de comercio (decisiones del evaluador logístico). La red aprende a proponer rutas topológicamente prometedoras.
+
+    \item Acción ($A_t$): La acción corresponde a la elección del siguiente puerto $v_{t+1}$ a visitar.
+    \begin{itemize}
+        \item El espacio de acciones es el conjunto de todos los puertos disponibles $\mathcal{P} = \{0, \dots, N-1\}$.
+        \item Se aplica un \textit{enmascaramiento} para asegurar la validez de las acciones: solo se permite viajar a puertos no visitados tal que el tiempo de viaje más el tiempo de retorno al inicio no exceda el límite $T$.
+    \end{itemize}
+
+    \item Transición: Dado el estado actual y la elección del puerto siguiente, el sistema transita determinísticamente al nuevo puerto, determinando el consumo de tiempo.
+
+    \item Recompensa ($R$): La recompensa se modela como el beneficio total obtenido por la ruta completa.
+     Tratamos con una recompensa episódica al final de la secuencia. La recompensa $R(\tau)$ para una trayectoria completa $\tau = (v_0, v_1, \dots, v_k, v_0)$ se calcula utilizando el evaluador exacto del problema.
 \end{itemize}
 
-\subsection{Representación del Estado y Enmascaramiento de Acciones}
+\subsection{Arquitectura del Modelo Neuronal}
 
-El estado del agente en cada paso de tiempo se define por el puerto actual y el historial de visitas. Para garantizar que las soluciones generadas sean factibles desde el punto de vista operativo, se implementa una técnica de \textit{enmascaramiento de acciones} (Action Masking):
+Utilizamos una arquitectura de red neuronal profunda diseñada para procesar la información de la instancia y tomar decisiones de navegación. El modelo parametriza una política estocástica $\pi_\theta(a|s)$.
 
+\subsubsection{Encoder de Instancia (Context Encoder)}
+
+El primer componente es un codificador que transforma las características crudas de la instancia en un vector de contexto denso (\textit{embedding}).
+
+\begin{itemize}
+    \item Entrada: Un vector concatenado que contiene matriz de tiempos de viaje, pesos, precios, capacidades, costos y parámetros globales.
+    \item Procesamiento: Un Perceptrón Multicapa (MLP) con funciones de activación ReLU.
+    \item Salida: Un vector de características latentes $h_{context}$ que resume la ``topología comercial" del problema.
+\end{itemize}
+
+\subsubsection{Policy Network (Actor)}
+
+La red de política decide el siguiente movimiento basándose en el contexto global y la ubicación actual.
+
+\begin{itemize}
+    \item Embedding de Puerto Actual: El puerto actual $v_t$ se codifica mediante One-Hot Encoding y se pasa por una capa lineal para obtener un vector denso $h_{port}$.
+    \item Decodificador:
+    \begin{itemize}
+        \item Concatena el contexto de la instancia $h_{context}$ con el embedding del puerto actual $h_{port}$.
+        \item Pasa esta información combinada a través de capas densas (MLP).
+        \item Salida: Un vector de \textit{logits} de tamaño $N$, que representa la preferencia no normalizada por cada posible puerto destino.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Mecanismo de Enmascaramiento y Selección}
+
+\begin{en}
+1.  Se calcula una máscara de validez $M_t \in \{0, 1\}^N$.
+2.  Los logits correspondientes a puertos inválidos se establecen en $-\infty$.
+3.  Se aplica una función \textbf{Softmax} para obtener una distribución de probabilidad válida:
+    \[ \pi_\theta(v_{t+1} | v_t, \mathcal{I}) = \text{Softmax}(\text{Logits}) \]
+
+\subsubsection{Especificaciones Técnicas (V1)}
+
+La implementación inicial en PyTorch se estructura con:
+\begin{itemize}
+    \item \textbf{Hiperparámetros Base}: Embedding Dim: 128, Hidden Dim: 1024, Optimizador Adam ($10^{-4}$).
+    \item \textbf{Encoder}: Linear $\to$ ReLU $\to$ Linear.
+    \item \textbf{Decoder}: Linear $\to$ ReLU $\to$ Linear.
+\end{itemize}
+
+\subsection{Algoritmo de Entrenamiento Base: REINFORCE}
+
+El entrenamiento base utiliza el algoritmo de gradiente de política \textbf{REINFORCE}, optimizando la esperanza del beneficio $J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} [R(\tau)]$.
+
+El gradiente se estima mediante:
+\[ \nabla_\theta J(\theta) \approx \frac{1}{M} \sum_{i=1}^M \sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t^{(i)} | s_t^{(i)}) \cdot (R(\tau^{(i)}) - b) \]
+donde $b$ es una línea base (baseline) móvil calculada como promedio exponencial.
+
+\subsubsection{Estrategia de Exploración}
+Implementamos una estrategia de \textbf{Temperature Scaling} en la función Softmax:
+\[ \pi(a_i) = \frac{\exp(z_i / \tau)}{\sum_j \exp(z_j / \tau)} \]
+La temperatura $\tau$ decae exponencialmente de 40.0 a 0.1 durante el entrenamiento, pasando de exploración a explotación.
+
+\subsubsection{Entrenamiento ``On-the-Fly" (Active Search)}
+El modelo se entrena específicamente para cada instancia (\textit{Active Search}):
+1. Inicializa los pesos.
+2. Realiza múltiples iteraciones sobre la \textbf{misma instancia}.
+3. Mantiene un registro de la mejor solución encontrada.
+
+\subsection{Mejora del Modelo: Arquitectura V2 con Memory Replay}
+
+Para mejorar la estabilidad y capacidad de convergencia, se desarrolló una versión actualizada (V2).
+
+\subsubsection{Nueva Arquitectura Profunda (V2)}
+Se incrementó la capacidad de la red:
+\begin{itemize}
+    \item \textbf{Dimensiones Aumentadas}: Embedding: $128 \to 512$, Hidden: $1024 \to 2048$.
+    \item \textbf{Profundidad Adicional}: Capas adicionales en el codificador de contexto y decodificador para permitir un razonamiento más abstracto.
+\end{itemize}
+
+\subsubsection{Memory Replay: Refuerzo de Soluciones Élite}
+Se incorpora un \textbf{buffer de memoria} que almacena las $K=4$ mejores rutas encontradas.
+Con frecuencia configurable (cada 4 epochs), se ejecuta una fase de replay:
 \begin{enumerate}
-    \item {Restricción de Unicidad:} Se asigna una probabilidad de cero (infinito negativo en los logits) a los puertos ya visitados, evitando ciclos innecesarios que no aportan valor según la definición del problema.
-    \item {Restricción Temporal:} Antes de seleccionar el siguiente puerto, el agente verifica si el tiempo necesario para viajar al puerto destino y regresar al puerto de origen ($v_0$) excede el tiempo límite $T$. Los puertos que violan esta condición son enmascarados de la distribución de probabilidad.
+    \item Para cada ruta élite en memoria, forzar la generación de la ruta.
+    \item Calcular probabilidades con temperatura estable (1.0).
+    \item Actualizar la política usando la recompensa almacenada.
 \end{enumerate}
 
-\subsection{Proceso de Entrenamiento}
-
-A diferencia de los enfoques de aprendizaje supervisado, el agente se entrena mediante una estrategia de optimización al vuelo (on-the-fly) para cada instancia específica. Durante el entrenamiento, se generan múltiples episodios (rutas) utilizando una política estocástica con temperatura ajustable. La temperatura $\tau$ comienza en un valor alto para fomentar la exploración de diversas trayectorias y decae linealmente hacia un valor bajo, permitiendo que el agente converja hacia decisiones más deterministas y lucrativas. Las recompensas se calculan evaluando el capital final obtenido en cada ruta mediante los evaluadores de transacciones y los pesos de la red se actualizan para maximizar la esperanza del retorno \cite{russell2020}.
+Este mecanismo estabiliza el aprendizaje y acelera la convergencia al reforzar patrones exitosos.
 
 \section{Evaluadores}
 
