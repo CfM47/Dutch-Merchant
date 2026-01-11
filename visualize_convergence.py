@@ -4,18 +4,23 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_convergence(log_dir: str):
+def plot_convergence(log_dir: str, output_dir: str = None):
+    if output_dir is None:
+        output_dir = log_dir
+
     if not os.path.exists(log_dir):
         print(f"Directory {log_dir} does not exist.")
         return
 
     log_files = [f for f in os.listdir(log_dir) if f.endswith('.json')]
+    log_files.sort()
+    log_files = log_files[-9:] + log_files[:-9]
     
     if not log_files:
         print(f"No .json log files found in {log_dir}")
         return
 
-    for log_file in log_files:
+    for i, log_file in enumerate(log_files):
         path = os.path.join(log_dir, log_file)
         try:
             with open(path, 'r') as f:
@@ -57,29 +62,35 @@ def plot_convergence(log_dir: str):
         
         # Plot
         plt.figure(figsize=(10, 6))
-        plt.plot(epochs, avg_rewards, label='Average Reward', marker='o')
-        plt.plot(epochs, max_rewards, label='Max Reward', linestyle='--', marker='x')
+        plt.rcParams.update({
+            "font.family": "serif",
+        })
+
+        plt.plot(epochs, avg_rewards, label='Recompensa Promedio', linewidth=1.5)
+        plt.plot(epochs, max_rewards, label='Recompensa máxima', linestyle='--', linewidth=1.2)
         
         # Plot Brute Force Optimal if available
         if "bf_profit" in extra_data:
             bf_profit = extra_data["bf_profit"]
-            plt.axhline(y=bf_profit, color='r', linestyle='-', label=f'Brute Force ({bf_profit:.2f})')
+            plt.axhline(y=bf_profit,  linestyle=':', label=f'Solución Optima (BF): ({bf_profit:.2f})')
         
-        plt.title(f'Convergence Analysis - {log_file}')
-        plt.xlabel('Epoch')
-        plt.ylabel('Reward')
-        plt.legend()
-        plt.grid(True)
-        
-        plot_path = os.path.join(log_dir, log_file.replace('.json', '.png'))
-        plt.savefig(plot_path)
-        print(f"Saved plot to {plot_path}")
+        plt.title('Análisis de Convergencia')
+        plt.xlabel('Época')
+        plt.ylabel('Recompensa')
+        plt.legend(frameon=False, loc="best")
+        plt.grid(True, which="both", linestyle=":", linewidth=0.5)
+
+        plot_path = os.path.join(output_dir, log_file.replace('.json', '.eps'))
+        plt.savefig(plot_path, format='eps')
+        print(f"Saved plot in eps to {plot_path}")
+
         plt.close()
 
 def main():
     log_dir = "results/logs"
+    output_dir = "report"
     print(f"Plotting results from {log_dir}...")
-    plot_convergence(log_dir)
+    plot_convergence(log_dir, output_dir)
     print("Done!")
 
 if __name__ == "__main__":
