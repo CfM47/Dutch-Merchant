@@ -518,7 +518,7 @@ Dada una ruta fija, el problema de determinar las transacciones óptimas se deno
 
 \subsection{Evaluación mediante Relajación Lineal}
 
-Para garantizar una resolución eficiente, se aplica una relajación de la restricción de integridad de las mercancías. Se asume que los bienes son infinitamente divisibles (variables continuas en lugar de enteras), lo que permite formular este desafío como un problema de Programación Lineal (LP). Si bien esta asunción simplifica la realidad física de ciertas mercancías, permite utilizar algoritmos de resolución exactos como Simplex \cite{cormen2009}. 
+Para garantizar una resolución eficiente, se aplica una relajación de la restricción de integridad de las mercancías. Se asume que los bienes son infinitamente divisibles (variables continuas en lugar de enteras), lo que permite formular este desafío como un problema de Programación Lineal (LP), el cual tiene conocidos algoritmos con tiempo de ejecución polinomial \cite{cormen2009}. Si bien esta asunción simplifica la realidad física de ciertas mercancías, permite utilizar algoritmos de resolución exactos como Simplex \cite{cormen2009}. 
 
 Se asume asimismo que la ruta $R$ proporcionada como entrada ya satisface las restricciones temporales del problema original.
 
@@ -584,6 +584,8 @@ El problema de evaluación de caminos donde los bienes son infinitamente divisib
 \end{proof}
 
 Con condiciones iniciales $f_0$ dado por la instancia e $I_{0,m} = 0$. Este modelo lineal permite evaluar rápidamente la rentabilidad potencial de una ruta candidata generada por los algoritmos de búsqueda.
+
+Sin asumir la infinita divisibilidad de los bienes, se tendría un problema de programación lineal entero, con el cual se puede evaluar un camino para obtener una solución óptima sin asumir ninguna relajación relajación del problema, sin embargo, este tipo de problemas es NP-duro \cite{cormen2009}.
 
 
 \subsection{Evaluador con Capital Infinito y sin límites de Compra o Venta}
